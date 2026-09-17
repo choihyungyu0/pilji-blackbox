@@ -1,0 +1,34 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# next.js
+/.next/
+/out/
+/build
+
+# misc
+.DS_Store
+*.pem
+*.tsbuildinfo
+next-env.d.ts
+
+# claude code tooling (launch.json 은 공유)
+.claude/settings.local.json
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files — 키는 절대 커밋하지 않는다
+.env
+.env*.local
+
+# vercel
+.vercel
+
+# 원천 대용량 (핸드오프 raw/ 는 복사하지 않음)
+/raw/
+/data/anyang_opendata/original/

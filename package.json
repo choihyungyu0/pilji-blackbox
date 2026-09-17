@@ -1,0 +1,41 @@
+{
+  "name": "pilji-blackbox",
+  "version": "0.1.0",
+  "private": true,
+  "description": "필지 블랙박스 — 안양시 위반건축물 우선조사 후보·필지 이력 타임라인·결재 문서 초안 (2026 안양시 공공데이터·AI 활용 대학생 경진대회)",
+  "scripts": {
+    "dev": "next dev --turbopack -p 3600",
+    "build": "next build",
+    "start": "next start -p 3600",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "data": "python scripts/build_data.py",
+    "data:vworld": "python scripts/fetch_vworld_layers.py",
+    "templates": "python scripts/make_hwpx_templates.py"
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.1.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.468.0",
+    "maplibre-gl": "^5.6.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "server-only": "^0.0.1",
+    "tailwind-merge": "^2.5.5",
+    "tw-animate-css": "^1.0.4",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^15.1.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

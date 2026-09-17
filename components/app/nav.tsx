@@ -1,0 +1,74 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { LockKeyhole, LogOut, Map as MapIcon, ClipboardList, FileText, BarChart3, Database } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { Mode } from "@/lib/types";
+
+const TABS = [
+  { href: "/map", label: "지도", icon: MapIcon, officer: false },
+  { href: "/investigate", label: "조사 목록", icon: ClipboardList, officer: true },
+  { href: "/agent", label: "결재 문서", icon: FileText, officer: true },
+  { href: "/dashboard", label: "성과", icon: BarChart3, officer: false },
+  { href: "/about", label: "데이터·모델", icon: Database, officer: false },
+];
+
+export function Nav({ mode }: { mode: Mode }) {
+  const path = usePathname();
+  const router = useRouter();
+  const officer = mode === "officer";
+
+  async function logout() {
+    await fetch("/api/auth", { method: "DELETE" });
+    router.push("/");
+    router.refresh();
+  }
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-border bg-paper/95 backdrop-blur">
+      <div className="mx-auto flex h-12 max-w-[1600px] items-center gap-2 px-3 sm:px-4">
+        <Link href="/" className="flex items-center gap-2 pr-2">
+          <span className="grid size-6 place-items-center rounded-sm bg-ink text-[10px] font-black text-white">필</span>
+          <span className="text-sm font-bold tracking-tight">필지 블랙박스</span>
+          <span className="hidden text-[11px] text-muted-foreground sm:inline">안양시 위반건축물 우선조사·필지 이력</span>
+        </Link>
+        <nav className="ml-1 flex items-center gap-0.5 overflow-x-auto" aria-label="주요 화면">
+          {TABS.filter((t) => !t.officer || officer).map((t) => {
+            const active = path === t.href || path.startsWith(t.href + "/");
+            return (
+              <Link
+                key={t.href}
+                href={t.href}
+                className={cn(
+                  "flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium whitespace-nowrap",
+                  active ? "bg-ink text-white" : "text-foreground/80 hover:bg-accent"
+                )}
+              >
+                <t.icon className="size-3.5" />
+                {t.label}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="ml-auto flex items-center gap-2">
+          <span
+            className={cn("chip", officer ? "border-brand/40 bg-brand/10 text-brand" : "text-muted-foreground")}
+            title={officer ? "필지 단위 후보·판정·문서 사용 가능" : "후보는 100m 격자로만 표시 (BR-P1)"}
+          >
+            {officer ? "담당자 모드" : "공개 모드"}
+          </span>
+          {officer ? (
+            <button className="btn btn-sm" onClick={logout} aria-label="담당자 모드 종료">
+              <LogOut className="size-3.5" /> 종료
+            </button>
+          ) : (
+            <Link href="/?officer=1" className="btn btn-sm">
+              <LockKeyhole className="size-3.5" /> 담당자
+            </Link>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}

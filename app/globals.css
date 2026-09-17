@@ -1,0 +1,189 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─────────────────────────────────────────────
+   필지 블랙박스 — 업무 도구 톤 (Homepage 토큰 계승: white / near-black · ink-blue)
+   신호 색: 위반 빨강 · 후보 주황 · 대장 미연계 파랑 · GB 초록 · 급경사지 노랑
+   ───────────────────────────────────────────── */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-brand: var(--brand);
+
+  --color-sig-viol: var(--sig-viol);
+  --color-sig-cand: var(--sig-cand);
+  --color-sig-candb: var(--sig-candb);
+  --color-sig-ledger: var(--sig-ledger);
+  --color-sig-gb: var(--sig-gb);
+  --color-sig-slope: var(--sig-slope);
+
+  --font-sans: var(--font-sans-stack);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.5rem;
+
+  --paper: #ffffff;
+  --ink: #0b0b0c;
+
+  --background: #ffffff;
+  --foreground: #0b0b0c;
+  --card: #ffffff;
+  --card-foreground: #0b0b0c;
+  --popover: #ffffff;
+  --popover-foreground: #0b0b0c;
+  --primary: #0b0b0c;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #0b0b0c;
+  --muted: #f5f5f6;
+  --muted-foreground: #6b6b73;
+  --accent: #f0f0f2;
+  --accent-foreground: #0b0b0c;
+  --destructive: #dc2626;
+  --border: rgba(11, 11, 12, 0.12);
+  --input: rgba(11, 11, 12, 0.18);
+  --ring: #0b0b0c;
+
+  --brand: #2563eb;
+
+  --sig-viol: #dc2626;
+  --sig-cand: #ea580c;
+  --sig-candb: #f59e0b;
+  --sig-ledger: #2563eb;
+  --sig-gb: #16a34a;
+  --sig-slope: #ca8a04;
+
+  --font-sans-stack: var(--font-pretendard), "Pretendard Variable", Pretendard, ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans-stack);
+    font-feature-settings: "ss01", "cv01", "tnum";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
+    word-break: keep-all;
+    font-weight: 700;
+  }
+  :where(a, button, [role="button"], input, select, textarea):focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer utilities {
+  .kicker {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+  .card {
+    @apply rounded-lg border border-border bg-card;
+  }
+  .label {
+    @apply text-[11px] font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+  .btn {
+    @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-sm {
+    @apply h-7 px-2 text-xs;
+  }
+  .input {
+    @apply h-9 rounded-md border border-input bg-background px-2.5 text-sm outline-none focus:border-brand;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium;
+  }
+  .badge-cand {
+    @apply inline-flex items-center rounded-sm bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-900;
+  }
+}
+
+/* MapLibre 팝업·컨트롤 최소 톤 */
+.maplibregl-popup-content {
+  font-family: var(--font-sans-stack);
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+.maplibregl-ctrl-attrib {
+  font-size: 10px;
+}
+.pb-marker {
+  font: 600 11px/1 var(--font-sans-stack);
+  color: #fff;
+  background: #0b0b0c;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.pb-marker.sel {
+  background: #2563eb;
+}
+.pb-dong-label {
+  font: 600 11px/1.1 var(--font-sans-stack);
+  color: #fff;
+  text-shadow: 0 0 3px #000, 0 0 6px #000;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.pb-dong-label.on-light {
+  color: #1f2937;
+  text-shadow: 0 0 3px #fff, 0 0 6px #fff;
+}

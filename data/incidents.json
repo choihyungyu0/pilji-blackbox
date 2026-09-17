@@ -1,0 +1,116 @@
+{
+ "note": "좌표 null은 브이월드 지오코더(키 발급 후)로 주소를 좌표화할 것. approx=true는 대략 위치 배지 표시.",
+ "incidents": [
+  {
+   "id": "INC-01",
+   "date": "2022-08-08",
+   "type": "침수",
+   "title": "폭우 침수 — 방수문 4개 중 2개 개방 방치, 차량 100여 대 침수",
+   "address": null,
+   "lon": null,
+   "lat": null,
+   "approx": true,
+   "managing": "시설 관리자·시",
+   "source": "이데일리",
+   "url": "https://edaily.co.kr/News/Read?mediaCodeNo=257&newsId=03220966632426336"
+  },
+  {
+   "id": "INC-02",
+   "date": "2024-07-22",
+   "type": "지하시설",
+   "title": "농수산물시장 열배관 파손",
+   "address": "안양시 동안구 농수산물도매시장 일대",
+   "lon": null,
+   "lat": null,
+   "approx": true,
+   "managing": "열 공급사",
+   "source": "안양시 2026 주요업무보고(AI전략국) 관내 사례",
+   "url": null
+  },
+  {
+   "id": "INC-03",
+   "date": "2025-04-11",
+   "type": "공사",
+   "title": "신안산선 광명 구간 붕괴 — 박달동 주민 피해",
+   "address": "광명시(신안산선 공사구간), 피해 주민 안양시 만안구 박달동",
+   "lon": null,
+   "lat": null,
+   "approx": true,
+   "managing": "국가철도공단·시공사",
+   "source": "다음 뉴스",
+   "url": "https://v.daum.net/v/7hwvC4e7tc"
+  },
+  {
+   "id": "INC-04",
+   "date": "2025-08-08",
+   "type": "지하시설",
+   "title": "안양3동 상수도 파손",
+   "address": "안양시 만안구 안양3동",
+   "lon": null,
+   "lat": null,
+   "approx": true,
+   "managing": "상수도사업소",
+   "source": "안양시 2026 주요업무보고(AI전략국) 관내 사례",
+   "url": null
+  },
+  {
+   "id": "INC-05",
+   "date": "2025-09-16",
+   "type": "공사",
+   "title": "폭우 중 건설현장 비계 붕괴",
+   "address": "안양시(현장 위치 미확인)",
+   "lon": null,
+   "lat": null,
+   "approx": true,
+   "managing": "시공사·건축 부서",
+   "source": "다음 뉴스",
+   "url": "https://v.daum.net/v/20250916163735133"
+  },
+  {
+   "id": "INC-06",
+   "date": "2025-10-27",
+   "type": "지하시설",
+   "title": "범계역 열수송관 파열(노후관) — 안양 3,340세대·군포 산본 4.8만 세대 공급 중단",
+   "address": "안양시 동안구 범계역 롯데백화점 앞",
+   "lon": null,
+   "lat": null,
+   "approx": true,
+   "managing": "GS파워·시",
+   "source": "머니투데이",
+   "url": "https://www.mt.co.kr/policy/2025/10/28/2025102814090893996"
+  },
+  {
+   "id": "INC-07",
+   "date": "2026-05-21",
+   "type": "사면",
+   "title": "박달동 축대 붕괴 — 주민 7명 대피(원인·소유 관계 공식 미확인)",
+   "address": "안양시 만안구 박달동 139-137 일대",
+   "pnu": "4117110300101390137",
+   "lon": 126.904872,
+   "lat": 37.400983,
+   "approx": true,
+   "managing": "미확인",
+   "source": "미디어투데이·뉴시스·다음 뉴스",
+   "url": "http://www.mediatoday.asia/1729441",
+   "urls": [
+    "https://v.daum.net/v/20260523162617521",
+    "https://www.newsis.com/view/NISX20260522_0003641736",
+    "https://www.getnews.co.kr/news/articleView.html?idxno=870729"
+   ],
+   "note": "공개 급경사지 목록(47곳)에 없음. 원인 단정 금지"
+  },
+  {
+   "id": "INC-08",
+   "date": "2026-07-11",
+   "type": "공사",
+   "title": "비산동 월판선 지하 공사현장 화재(약 1시간 30분, 인명피해 없음)",
+   "address": "안양시 동안구 비산동 월곶판교선 공사현장",
+   "lon": null,
+   "lat": null,
+   "approx": true,
+   "managing": "국가철도공단·시공사",
+   "source": "경기신문",
+   "url": "https://www.kgnews.co.kr/news/article.html?no=903470"
+  }
+ ]
+}

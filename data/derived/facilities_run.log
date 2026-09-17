@@ -1,0 +1,6 @@
+[facilities] 공공건축물·대피시설·급수시설 지오코딩 …
+  public_building: 450/537
+  shelter: 213/213
+  water: 45/46
+  → data\derived\facilities.json (235KB)
+완료
