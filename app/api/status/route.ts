@@ -7,9 +7,9 @@ export const dynamic = "force-dynamic";
  * 연동 상태 — 키 값은 절대 반환하지 않고 설정 여부·도달 여부만. 배포 후 환경변수 점검용 (공개).
  */
 async function probeSupabase(): Promise<{ configured: boolean; reachable: boolean | null; tables: boolean | null; note: string }> {
-  const url = process.env.SUPABASE_URL?.replace(/\/+$/, "");
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return { configured: false, reachable: null, tables: null, note: "SUPABASE_URL·SERVICE_ROLE_KEY 미설정 — 판정은 기기 보관" };
+  const url = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "") || "";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || "";
+  if (!/^https?:\/\//.test(url) || key.length <= 20) return { configured: false, reachable: null, tables: null, note: "SUPABASE_URL·SERVICE_ROLE_KEY 미설정 — 판정은 기기 보관" };
   try {
     const ctl = new AbortController();
     const t = setTimeout(() => ctl.abort(), 4000);
