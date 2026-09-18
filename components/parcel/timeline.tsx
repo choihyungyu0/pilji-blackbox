@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ExternalLink } from "lucide-react";
-import type { TimelineEvent } from "@/lib/types";
+import type { ParcelContext, TimelineEvent } from "@/lib/types";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,8 @@ export type TimelineData = {
   notes: string[];
   nearbySlopes: { pnu: string; names: string[]; dong: string; jibun: string; d: number; lon: number; lat: number }[];
   asof: string;
+  /** PCL-04 필지 여건 — 안양시 공공데이터·행안부·브이월드·적용 법령 */
+  context: ParcelContext | null;
 };
 
 const KIND: Record<TimelineEvent["kind"], { label: string; color: string }> = {
@@ -102,6 +104,52 @@ export function Timeline({ state }: { state: ReturnType<typeof useTimeline> }) {
             </li>
           ))}
         </ol>
+      )}
+    </div>
+  );
+}
+
+/**
+ * PCL-04 필지 여건 — 타임라인은 "그 필지에서 일어난 일"이라 대개 건물통합정보 행만 남는다.
+ * 여건은 어느 필지든 안양시 공공데이터(공공건축물·대피/급수시설·공동주택·착공신고·수방자재)·행안부 급경사지·브이월드 개발제한구역·
+ * 사고 보도·이웃 위반을 반경으로 대조해 채우고, 적용 법령을 붙인다. 항목마다 출처·기준일.
+ */
+export function ParcelFacts({ context, compact }: { context: ParcelContext | null | undefined; compact?: boolean }) {
+  const [open, setOpen] = useState(!compact);
+  if (!context) return null;
+  const { facts, laws } = context;
+  return (
+    <div className="text-xs">
+      <button className="flex w-full items-center gap-1 text-left" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <span className="label">필지 여건 · 안양시 공공데이터 {facts.length}항목 · 적용 법령 {laws.length}</span>
+        <span className="ml-auto text-[10px] text-muted-foreground">{open ? "접기" : "펼치기"}</span>
+      </button>
+      {open && (
+        <>
+          <dl className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1">
+            {facts.map((f) => (
+              <div key={f.key} className="contents">
+                <dt className="whitespace-nowrap text-[11px] font-semibold text-muted-foreground">{f.label}</dt>
+                <dd className="min-w-0">
+                  <span className="text-[11px]">{f.value}</span>
+                  {f.url && (
+                    <a href={f.url} target="_blank" rel="noreferrer" className="ml-1 inline-flex items-center gap-0.5 text-brand underline">링크 <ExternalLink className="size-2.5" /></a>
+                  )}
+                  <span className="block text-[10px] text-muted-foreground">출처 {f.source} · 기준 {f.asof}{f.note ? ` · ${f.note}` : ""}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-1.5 text-[11px]">
+            <span className="font-semibold text-muted-foreground">적용 법령</span>{" "}
+            {laws.map((l, i) => (
+              <span key={l.id}>
+                {i > 0 && " · "}
+                <a href={l.url} target="_blank" rel="noreferrer" className="underline" title={l.title}>{l.law} {l.article}</a>
+              </span>
+            ))}
+          </p>
+        </>
       )}
     </div>
   );

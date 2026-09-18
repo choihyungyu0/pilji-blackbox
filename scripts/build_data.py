@@ -258,6 +258,8 @@ def build_misc():
         f["geometry"] = round_coords(f["geometry"], 5)
         f["properties"] = {"adm_nm": f["properties"]["adm_nm"].split()[-1], "adm_cd2": f["properties"].get("adm_cd2"), "sggnm": f["properties"].get("sggnm")}
     dump(os.path.join(PUB, "hjd.geojson"), {"type": "FeatureCollection", "source": "행정동 경계(안양시 31개)", "features": hjd["features"]})
+    # 서버(필지 여건)에서 import 할 수 있게 .json 사본 — Next 는 .geojson 을 모듈로 못 읽는다
+    dump(os.path.join(DERIVED, "hjd.json"), {"source": "행정동 경계(안양시 31개)", "features": hjd["features"]})
 
     mm = load(os.path.join(DATA, "model_metrics.json"))
     dump(os.path.join(PUB, "model_metrics.json"), mm)
@@ -272,9 +274,25 @@ def build_misc():
     else:
         print("  facilities.json 없음 — scripts/fetch_vworld_layers.py facilities 먼저")
 
+    # 수방자재 현황(안양시 15085817) — 행정동별 보유 수량. 2025-12 이후 명칭이 바뀐 안양8동→명학동, 안양9동→병목안동 은 행정동 경계 이름에 맞춘다.
+    fs_path = os.path.join(DATA, "anyang_opendata", "anyang_flood_supplies_20251230_15085817.csv")
+    if os.path.exists(fs_path):
+        rename = {"안양8동": "명학동", "안양9동": "병목안동"}
+        rows = []
+        with open(fs_path, encoding="utf-8-sig") as fh:
+            for r in csv.DictReader(fh):
+                r = {k.strip(): (v or "").strip() for k, v in r.items() if k}
+                name = r.pop("구분", "")
+                rows.append({"hjd": rename.get(name, name), "items": {k: int(v) if v.isdigit() else v for k, v in r.items()}})
+        dump(os.path.join(DERIVED, "flood_supplies.json"), {"source": "경기도 안양시_수방자재 현황(공공데이터포털 15085817)", "asof": "2025-12-30", "rows": rows})
+        print(f"  flood_supplies: {len(rows)}행")
+
 
 if __name__ == "__main__":
-    officer = build_buildings()
-    build_timeline_sources(officer)
-    build_misc()
+    if sys.argv[1:] == ["misc"]:
+        build_misc()
+    else:
+        officer = build_buildings()
+        build_timeline_sources(officer)
+        build_misc()
     print("완료")

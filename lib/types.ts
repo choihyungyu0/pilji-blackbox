@@ -82,6 +82,14 @@ export type TimelineEvent = {
   reliability: "공식" | "판정" | "추정" | "정보없음";
 };
 
+/** PCL-04 필지 여건 — 안양시 공공데이터·행안부·브이월드·법령을 한 필지에 대조한 사실 목록. 출처·기준일 필수(BR-T1). */
+export type ParcelFact = { key: string; label: string; value: string; source: string; asof: string; url?: string; note?: string };
+export type ParcelContext = {
+  pnu: string; buildingId: number; facts: ParcelFact[];
+  laws: { id: string; law: string; article: string; title: string; url: string }[];
+  asof: string;
+};
+
 export type LawItem = {
   id: string;
   law: string;

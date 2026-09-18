@@ -286,8 +286,38 @@ def geocode_facilities():
     save(os.path.join(DERIVED, "facilities.json"), {"stats": stats, "generated": time.strftime("%Y-%m-%d"), "items": items})
 
 
+def geocode_apartments():
+    """안양시_공동주택 현황(3045074) 180단지 — 도로명주소 지오코딩. 기존 facilities.json 에 kind=apartment 로 합친다.
+    관리사무소 전화·팩스는 싣지 않는다."""
+    print("[apartments] 공동주택 현황 지오코딩 …")
+    od = os.path.join(DATA, "anyang_opendata")
+    fpath = os.path.join(DERIVED, "facilities.json")
+    fac = json.load(open(fpath, encoding="utf-8")) if os.path.exists(fpath) else {"stats": {}, "items": []}
+    fac["items"] = [it for it in fac["items"] if it.get("kind") != "apartment"]
+    rows = list(csv.DictReader(open(os.path.join(od, "anyang_apartments_20250922_3045074.csv"), encoding="utf-8-sig")))
+    ok = 0
+    for r in rows:
+        r = {k.strip(): (v or "").strip() for k, v in r.items() if k}
+        addr = r.get("도로명주소", "")
+        # "A+B" 처럼 여러 주소가 붙은 단지는 첫 주소로, "동안구경수대로" 처럼 붙은 표기는 띄어서
+        first = re.sub(r"(만안구|동안구)(?=\S)", r" ", addr.split("+")[0].strip())
+        g = geocode_any(first) or geocode_any(re.sub(r"\s*\d+번길\s*", "번길 ", first))
+        it = {"kind": "apartment", "name": r.get("아파트명", ""), "address": addr, "hjd": r.get("구분", ""),
+              "built": r.get("준공년도") or None, "blocks": r.get("동수") or None, "units": r.get("세대수") or None,
+              "source": "경기도 안양시_공동주택 현황(공공데이터포털 3045074)", "asof": "2025-09-22"}
+        if g:
+            it["lon"], it["lat"] = round(g["lon"], 6), round(g["lat"], 6)
+            ok += 1
+        fac["items"].append(it)
+        time.sleep(0.04)
+    fac["stats"]["apartment"] = {"rows": len(rows), "geocoded": ok}
+    fac["generated"] = time.strftime("%Y-%m-%d")
+    print(f"  apartment: {ok}/{len(rows)}")
+    save(fpath, fac)
+
+
 if __name__ == "__main__":
-    steps = sys.argv[1:] or ["gb", "slopes", "incidents", "facilities"]
+    steps = sys.argv[1:] or ["gb", "slopes", "incidents", "facilities", "apartments"]
     for s in steps:
-        {"gb": fetch_gb, "slopes": fetch_slopes, "incidents": geocode_incidents, "facilities": geocode_facilities}[s]()
+        {"gb": fetch_gb, "slopes": fetch_slopes, "incidents": geocode_incidents, "facilities": geocode_facilities, "apartments": geocode_apartments}[s]()
     print("완료")

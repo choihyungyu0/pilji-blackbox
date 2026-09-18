@@ -1,6 +1,7 @@
 import "server-only";
 import { buildingById, buildingsByPnu, findByJibun, nearby, DATA_ASOF } from "../data-server";
 import { buildTimeline, nearbySlopes } from "../timeline";
+import { buildContext } from "../context";
 import { searchLaws } from "../laws";
 import { buildCorrectionOrder, buildFineImposition, buildFineWarning, buildLedger, buildPriorNotice, buildSurveyPlan, buildSurveyReport, type CaseInput } from "../docs";
 import { canAdvance, STAGE_META, todosOf } from "../stages";
@@ -70,13 +71,14 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: "timeline_build",
-    description: "필지 타임라인(사용승인·대장 변경·위반 표기 신규/해제·급경사지 등재·착공신고·사고 보도)을 연도순으로 조립한다. 각 이벤트에 출처·기준일이 있다.",
+    description: "필지 타임라인(사용승인·대장 변경·위반 표기 신규/해제·급경사지 등재·착공신고·사고 보도)을 연도순으로 조립하고, 필지 여건(행정동·수방자재·개발제한구역·급경사지·공공건축물·대피/급수시설·공동주택·착공신고·이웃 위반)과 적용 법령 목록을 함께 반환한다. 각 항목에 출처·기준일이 있다.",
     parameters: { type: "object", properties: { pnu: { type: "string" }, id: { type: "number" } } },
     run: (args, ctx) => {
       const b = resolveBuilding(args, ctx);
       if (!b) return { error: "필지를 찾을 수 없습니다" };
       const t = buildTimeline(b.pnu);
-      return { pnu: b.pnu, count: t.events.length, events: t.events, notes: t.notes, nearby_slopes: nearbySlopes(b) };
+      const ctx2 = buildContext(b.pnu);
+      return { pnu: b.pnu, count: t.events.length, events: t.events, notes: t.notes, nearby_slopes: nearbySlopes(b), context: ctx2?.facts ?? [], applicable_laws: ctx2?.laws ?? [] };
     },
   },
   {

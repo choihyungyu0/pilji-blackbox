@@ -10,7 +10,7 @@ import { STAGES, STAGE_META, stageIndex, todosOf } from "@/lib/stages";
 import { caseForDoc, useDocGen } from "@/lib/client-docs";
 import { fmt } from "@/lib/format";
 import { VERDICT_LABEL, type Stage } from "@/lib/types";
-import { Timeline, useTimeline } from "@/components/parcel/timeline";
+import { Timeline, useTimeline, ParcelFacts } from "@/components/parcel/timeline";
 import { ScoreCard } from "@/components/parcel/score-card";
 import { DocCard } from "@/components/agent/doc-card";
 import { OrgForm } from "./org-form";
@@ -154,6 +154,11 @@ export function CaseDetail({ id }: { id: number }) {
 
       <aside data-tour="side" className="space-y-3">
         <ScoreCard b={b} />
+        {tl.data?.context && (
+          <section className="card p-3">
+            <ParcelFacts context={tl.data.context} compact />
+          </section>
+        )}
         <section className="card p-3">
           <p className="label mb-2">필지 타임라인</p>
           <Timeline state={tl} />

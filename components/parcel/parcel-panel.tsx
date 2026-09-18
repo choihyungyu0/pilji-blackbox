@@ -11,7 +11,7 @@ import { fmt, floorsText, kstDate } from "@/lib/format";
 import { distanceM } from "@/lib/geo";
 import { VERDICT_LABEL, type Mode } from "@/lib/types";
 import { ScoreCard } from "./score-card";
-import { Timeline, useTimeline } from "./timeline";
+import { ParcelFacts, Timeline, useTimeline } from "./timeline";
 
 type Facility = { kind: "public_building" | "shelter" | "water"; name: string; address: string; lon: number; lat: number; source: string; asof: string; capacity?: string };
 const FAC_LABEL = { public_building: "공공건축물", shelter: "비상대피시설", water: "민방위 급수시설" } as const;
@@ -117,6 +117,13 @@ export function ParcelPanel({ mode }: { mode: Mode }) {
         {officer ? <div data-tour="score"><ScoreCard b={b} /></div> : (
           <section className="card p-3 text-xs text-muted-foreground">
             공개 모드 — AI 후보·점수는 필지 단위로 표시하지 않습니다(100m 격자 집계만). 담당자 모드에서 점수·근거·판정을 볼 수 있습니다.
+          </section>
+        )}
+
+        {/* PCL-04 필지 여건 — 안양시 공공데이터·법령 */}
+        {tl.data?.context && (
+          <section className="card p-3" data-tour="facts">
+            <ParcelFacts context={tl.data.context} />
           </section>
         )}
 
