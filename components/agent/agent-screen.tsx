@@ -11,7 +11,10 @@ import { VERDICT_LABEL } from "@/lib/types";
 import { DocCard } from "./doc-card";
 import { DocPanel } from "./doc-panel";
 import { MdLite } from "./md-lite";
-import { VerdictEditor } from "@/components/investigate/verdict-editor";
+import { SurveyForm } from "@/components/cases/survey-form";
+import { useCases } from "@/store/cases";
+import { STAGE_META } from "@/lib/stages";
+import { caseForDoc } from "@/lib/client-docs";
 import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string; tools?: ToolCallLog[]; citations?: Citation[]; docs?: DocPayload[]; removed?: string[]; error?: boolean };
@@ -21,6 +24,7 @@ const PRESETS = [
   "이 필지의 기본정보와 점수 근거를 정리해줘",
   "이 필지 타임라인을 출처와 함께 요약해줘",
   "위반건축물 시정명령과 이행강제금 근거 조문을 인용해줘",
+  "이 사건의 현재 단계와 다음 할 일을 알려줘",
   "현장조사 기안과 사전통지 초안을 만들어줘",
 ];
 
@@ -30,7 +34,7 @@ export function AgentScreen() {
   const index = useBuildings((s) => s.index);
   const load = useBuildings((s) => s.load);
   const list = useApp((s) => s.list);
-  const verdicts = useApp((s) => s.verdicts);
+  const cases = useCases((s) => s.cases);
   const addLog = useApp((s) => s.addLog);
   const [selectedId, setSelectedId] = useState<number | null>(sp.get("id") ? Number(sp.get("id")) : null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -63,9 +67,9 @@ export function AgentScreen() {
       id: selected?.id ?? null,
       pnu: selected?.pnu ?? null,
       listIds: list.map((x) => x.id),
-      verdicts: Object.fromEntries(Object.values(verdicts).map((v) => [String(v.id), { verdict: v.verdict, memo: v.memo, at: v.at }])),
+      cases: Object.fromEntries(Object.values(cases).map((k) => [String(k.id), caseForDoc(k)])),
     }),
-    [selected, list, verdicts]
+    [selected, list, cases]
   );
 
   async function send(text: string) {
@@ -109,9 +113,10 @@ export function AgentScreen() {
           {index ? (
             <select className="input h-8 text-xs" value={selectedId ?? ""} onChange={(e) => setSelectedId(e.target.value ? Number(e.target.value) : null)} aria-label="필지 선택">
               <option value="">필지 미선택</option>
-              {(selected && !list.some((x) => x.id === selected.id) ? [{ id: selected.id, pnu: selected.pnu }, ...list] : list).map((it) => {
+              {[...(selected && !list.some((x) => x.id === selected.id) && !cases[selected.id] ? [{ id: selected.id }] : []), ...list, ...Object.values(cases).filter((k) => !list.some((x) => x.id === k.id)).map((k) => ({ id: k.id }))].map((it) => {
                 const b = index.byId.get(it.id);
-                return b ? <option key={it.id} value={it.id}>{b.dong} {b.jibun} {verdicts[b.id] ? `· ${VERDICT_LABEL[verdicts[b.id].verdict]}` : ""}</option> : null;
+                const k = cases[it.id];
+                return b ? <option key={it.id} value={it.id}>{b.dong} {b.jibun} {k ? `· ${STAGE_META[k.stage].label}` : ""}{k?.survey ? ` · ${VERDICT_LABEL[k.survey.verdict]}` : ""}</option> : null;
               })}
             </select>
           ) : (
@@ -128,7 +133,7 @@ export function AgentScreen() {
         {selected && (
           <div className="card mt-2 p-2.5 text-xs">
             <p className="font-semibold">{selected.dong} {selected.san === "산" ? "산 " : ""}{selected.jibun} <span className="font-normal text-muted-foreground">· {selected.use ?? "용도 정보없음"} · 점수 {selected.score == null ? "대상 아님" : selected.score.toFixed(3)} {selected.grade && selected.cand ? `(${selected.grade}등급 후보)` : ""}</span></p>
-            <div className="mt-1.5"><VerdictEditor b={selected} compact /></div>
+            <div className="mt-1.5"><SurveyForm b={selected} compact /></div>
           </div>
         )}
 

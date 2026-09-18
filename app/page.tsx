@@ -50,12 +50,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
         {officer ? (
           <div className="mt-4 space-y-2 text-sm">
             <p className="rounded-md bg-brand/10 px-3 py-2 text-brand">담당자 모드로 로그인되어 있습니다.</p>
-            <Link href={sp.next || "/map"} className="btn-primary w-full">
-              지도로 이동
+            <Link href={sp.next || "/work"} className="btn-primary w-full">
+              업무 홈으로 이동
             </Link>
           </div>
         ) : pinConfigured ? (
-          <PinForm next={sp.next || "/map"} autoFocus={sp.officer === "1"} />
+          <PinForm next={sp.next || "/work"} autoFocus={sp.officer === "1"} />
         ) : (
           <p className="mt-4 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
             담당자 모드 비활성 — 서버에 ADMIN_PIN(6자리 이상)이 설정되지 않았습니다.
@@ -63,8 +63,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
         )}
         <ul className="mt-5 space-y-1 text-[11px] text-muted-foreground">
           <li>· 위반 표기 1,573동(빨강) · AI 후보 1,918동(주황) 필지 단위 표시</li>
-          <li>· 조사 목록 생성·CSV·현장 판정 입력</li>
-          <li>· 에이전트 대화 → 현장조사 기안문·사전통지 초안(HWPX)</li>
+          <li>· 조사 계획 기안 → 현장조사 판정 → 사전통지 → 시정명령 → 계고·부과 → 종결</li>
+          <li>· 법정 서식 7종 HWPX·PDF, 관리대장 CSV, 에이전트 대화</li>
           <li>· 5회 오류 시 60초 잠금</li>
         </ul>
       </section>

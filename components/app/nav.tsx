@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LockKeyhole, LogOut, Map as MapIcon, ClipboardList, FileText, BarChart3, Database } from "lucide-react";
+import { LockKeyhole, LogOut, Map as MapIcon, ClipboardList, FileText, BarChart3, Database, Home, FolderKanban } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Mode } from "@/lib/types";
 
 const TABS = [
+  { href: "/work", label: "업무", icon: Home, officer: true },
   { href: "/map", label: "지도", icon: MapIcon, officer: false },
-  { href: "/investigate", label: "조사 목록", icon: ClipboardList, officer: true },
-  { href: "/agent", label: "결재 문서", icon: FileText, officer: true },
+  { href: "/investigate", label: "조사 계획", icon: ClipboardList, officer: true },
+  { href: "/cases", label: "사건", icon: FolderKanban, officer: true },
+  { href: "/agent", label: "에이전트", icon: FileText, officer: true },
   { href: "/dashboard", label: "성과", icon: BarChart3, officer: false },
   { href: "/about", label: "데이터·모델", icon: Database, officer: false },
 ];

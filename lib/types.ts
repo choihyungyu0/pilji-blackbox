@@ -104,7 +104,68 @@ export type ToolCallLog = {
   note: string;
 };
 
-export type DocTemplate = "doc01_survey_plan" | "doc02_prior_notice";
+export type DocTemplate =
+  | "doc01_survey_plan"      // 현장조사 계획 기안문 (일반기안문 서식)
+  | "doc02_prior_notice"     // 처분사전통지서(의견제출통지) — 행정절차법 시행규칙 별지 제8호서식
+  | "doc03_survey_report"    // 현장조사 결과 보고 (기안문 + 붙임 조사표)
+  | "doc04_correction_order" // 시정명령서 (건축법 79조①)
+  | "doc05_fine_warning"     // 이행강제금 부과 계고서 (건축법 80조③)
+  | "doc06_fine_imposition"  // 이행강제금 부과 (건축법 80조④)
+  | "doc07_ledger";          // 위반건축물관리대장 — 건축법 시행규칙 별지 제29호서식
+
+/** 사건 단계 — 담당자 업무 순서 그대로. 화살표는 stages.ts 의 규칙으로만 넘어간다. */
+export type Stage = "CANDIDATE" | "PLANNED" | "SURVEYED" | "NOTICED" | "ORDERED" | "WARNED" | "FINED" | "CLOSED";
+
+export type ViolationType = "무허가건축" | "무단증축" | "무단용도변경" | "무단대수선" | "위법시공" | "기타";
+export const VIOLATION_TYPES: ViolationType[] = ["무허가건축", "무단증축", "무단용도변경", "무단대수선", "위법시공", "기타"];
+
+/** 이행강제금 산정 — 건축법 80조①, 시행령 115조의2·115조의3·별표15, 안양시 건축 조례 37조. 값은 담당자 입력. */
+export type FineEstimate = {
+  basis: "80-1-1" | "80-1-2";
+  /** 1호: 1㎡ 시가표준액 × 위반면적 × 50% × 비율 / 2호: 건축물 시가표준액 × 별표15 비율 */
+  stdPricePerM2: number | null;
+  stdPriceTotal: number | null;
+  area: number | null;
+  ratio: number;
+  halved: boolean;
+  aggravated: boolean;
+  reduction: number;
+  amount: number | null;
+  formula: string;
+};
+
+export type CaseSurvey = {
+  at: string;
+  verdict: Verdict;
+  violationType?: ViolationType | null;
+  area?: number | null;
+  floor?: string;
+  useBefore?: string;
+  useAfter?: string;
+  findings: string;
+  photo?: string | null;
+  surveyor?: string;
+};
+
+export type CaseHistory = { at: string; action: string };
+
+export type Case = {
+  id: number;
+  pnu: string;
+  stage: Stage;
+  origin: "ai" | "manual" | "complaint";
+  createdAt: string;
+  updatedAt: string;
+  plan?: { planDate?: string; team?: string; docNo?: string; approvedAt?: string; batchAt?: string };
+  survey?: CaseSurvey;
+  notice?: { generatedAt: string; sentAt?: string; dueDate: string; content: string; opinion?: "none" | "received"; opinionNote?: string };
+  order?: { generatedAt: string; sentAt?: string; deadline: string; content: string; docNo?: string };
+  warn?: { generatedAt: string; sentAt?: string; deadline: string; estimate: FineEstimate; noncomplianceNote?: string };
+  fine?: { generatedAt: string; imposedAt?: string; payDue: string; estimate: FineEstimate; docNo?: string };
+  closed?: { at: string; reason: "시정완료" | "정상" | "대상아님" | "기타"; note?: string };
+  history: CaseHistory[];
+  synced?: boolean;
+};
 
 export type DocPayload = {
   template: DocTemplate;

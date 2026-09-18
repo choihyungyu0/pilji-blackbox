@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useApp } from "@/store/app-store";
+import { useCases } from "@/store/cases";
 import { useBuildings } from "@/store/buildings";
 import { VERDICT_LABEL } from "@/lib/types";
 
@@ -9,20 +10,21 @@ type DongRow = { dong: string; n: number; nl: number; viol: number; ledger: numb
 
 /** TBL-01 동별 현황 (DSH-01) — 막대 병행. 판정 열은 기기·서버 보관 판정에서 집계, 0건이면 "-" */
 export function DongTable({ rows, total }: { rows: DongRow[]; total: Record<string, number> }) {
-  const verdicts = useApp((s) => s.verdicts);
+  const cases = useCases((s) => s.cases);
   const index = useBuildings((s) => s.index);
   const mode = useApp((s) => s.mode);
   const byDong = useMemo(() => {
     const m = new Map<string, Record<string, number>>();
-    for (const v of Object.values(verdicts)) {
-      const dong = index?.byId.get(v.id)?.dong ?? rows.find((r) => v.pnu.startsWith(pnuPrefix(r.dong)))?.dong;
+    for (const k of Object.values(cases)) {
+      if (!k.survey) continue;
+      const dong = index?.byId.get(k.id)?.dong ?? rows.find((r) => k.pnu.startsWith(pnuPrefix(r.dong)))?.dong;
       if (!dong) continue;
       const c = m.get(dong) ?? {};
-      c[v.verdict] = (c[v.verdict] ?? 0) + 1;
+      c[k.survey.verdict] = (c[k.survey.verdict] ?? 0) + 1;
       m.set(dong, c);
     }
     return m;
-  }, [verdicts, index, rows]);
+  }, [cases, index, rows]);
   const maxN = Math.max(...rows.map((r) => r.n));
 
   return (
@@ -67,7 +69,7 @@ export function DongTable({ rows, total }: { rows: DongRow[]; total: Record<stri
             <td className="px-3 py-2 tnum">{total.viol_Y.toLocaleString()} (6.7%)</td>
             <td className="px-3 py-2 tnum">{total.cand.toLocaleString()} ({total.A}/{total.B})</td>
             <td className="px-3 py-2 tnum">{total.gb}</td>
-            <td className="px-3 py-2 tnum">{mode === "officer" ? Object.keys(verdicts).length || "-" : ""}</td>
+            <td className="px-3 py-2 tnum">{mode === "officer" ? Object.values(cases).filter((k) => k.survey).length || "-" : ""}</td>
           </tr>
         </tbody>
       </table>

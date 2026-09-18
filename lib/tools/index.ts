@@ -2,9 +2,10 @@ import "server-only";
 import { buildingById, buildingsByPnu, findByJibun, nearby, DATA_ASOF } from "../data-server";
 import { buildTimeline, nearbySlopes } from "../timeline";
 import { searchLaws } from "../laws";
-import { buildPriorNotice, buildSurveyPlan } from "../docs";
+import { buildCorrectionOrder, buildFineImposition, buildFineWarning, buildLedger, buildPriorNotice, buildSurveyPlan, buildSurveyReport, type CaseInput } from "../docs";
+import { canAdvance, STAGE_META, todosOf } from "../stages";
 import { parseJibunQuery, jibunOf } from "../geo";
-import type { Building, ToolCallLog } from "../types";
+import type { Building, Case, ToolCallLog } from "../types";
 
 /**
  * AGT-01 공간 AI 에이전트 도구 8종 (CLAUDE.md 표). 모든 도구는 정적 데이터·판정 컨텍스트만 읽는다.
@@ -14,8 +15,8 @@ import type { Building, ToolCallLog } from "../types";
 export type AgentContext = {
   pnu?: string | null;
   id?: number | null;
-  /** 클라이언트가 보관 중인 판정 (건물 id → 판정) */
-  verdicts?: Record<string, { verdict: string; memo?: string; at?: string }>;
+  /** 클라이언트 사건 스토어 (건물 id → 사건) — 판정·단계·문서 기록 */
+  cases?: Record<string, CaseInput>;
   /** 조사 목록 건물 id */
   listIds?: number[];
 };
@@ -115,31 +116,63 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: "doc_render",
-    description: "HWPX 문서 초안 토큰을 만든다. template=survey_plan(현장조사 계획 기안문, 조사 목록 사용) 또는 prior_notice(처분 사전통지서 — 판정이 위반인 필지만). 실제 파일은 클라이언트가 템플릿에 치환해 생성한다.",
+    description: "결재 문서 초안 토큰을 만든다. template: survey_plan(현장조사 계획 기안, 조사 목록) · survey_report(현장조사 결과 보고, 판정된 사건들) · prior_notice(처분사전통지서 — 판정=위반) · correction_order(시정명령서 — 사전통지 후) · fine_warning(이행강제금 계고 — 시정명령 후) · fine_imposition(이행강제금 부과 — 계고 후) · ledger(위반건축물관리대장). 실제 HWPX/PDF 는 화면에서 만든다.",
     parameters: {
       type: "object",
       properties: {
-        template: { type: "string", enum: ["survey_plan", "prior_notice"] },
-        ids: { type: "array", items: { type: "number" }, description: "survey_plan 대상 건물 id (없으면 조사 목록)" },
-        id: { type: "number", description: "prior_notice 대상 건물 id (없으면 선택 필지)" },
+        template: { type: "string", enum: ["survey_plan", "survey_report", "prior_notice", "correction_order", "fine_warning", "fine_imposition", "ledger"] },
+        ids: { type: "array", items: { type: "number" }, description: "survey_plan/survey_report 대상 건물 id (없으면 조사 목록)" },
+        id: { type: "number", description: "단일 사건 문서의 건물 id (없으면 선택 필지)" },
         purpose: { type: "string" }, planDate: { type: "string" }, team: { type: "string" },
-        dueDays: { type: "number", description: "의견제출 기한(일) 10~30" }, content: { type: "string", description: "처분 내용" },
+        dueDays: { type: "number", description: "의견제출 기한(일) 10~30" }, content: { type: "string", description: "처분(시정명령) 내용" },
+        deadlineDays: { type: "number", description: "시정기한/이행기한(일)" },
       },
       required: ["template"],
     },
     run: (args, ctx) => {
-      if (args.template === "survey_plan") {
+      const tpl = String(args.template);
+      if (tpl === "survey_plan") {
         const ids = Array.isArray(args.ids) && args.ids.length ? (args.ids as number[]) : ctx.listIds ?? (ctx.id ? [ctx.id] : []);
         if (!ids.length) return { error: "조사 목록이 비어 있습니다 — 조사 목록을 먼저 만들거나 필지를 선택하세요" };
         return buildSurveyPlan({ ids, purpose: args.purpose as string | undefined, planDate: args.planDate as string | undefined, team: args.team as string | undefined });
       }
-      if (args.template === "prior_notice") {
-        const b = resolveBuilding(args, ctx);
-        if (!b) return { error: "필지를 찾을 수 없습니다" };
-        const v = ctx.verdicts?.[String(b.id)];
-        return buildPriorNotice({ id: b.id, verdict: v?.verdict, memo: v?.memo, verdictAt: v?.at, dueDays: args.dueDays as number | undefined, content: args.content as string | undefined });
+      if (tpl === "survey_report") {
+        const ids = Array.isArray(args.ids) && args.ids.length ? (args.ids as number[]) : ctx.listIds ?? [];
+        const cases = ids.map((id) => ctx.cases?.[String(id)]).filter((x): x is CaseInput => Boolean(x));
+        if (!cases.length) return { error: "판정이 기록된 사건이 없습니다" };
+        return buildSurveyReport({ cases, team: args.team as string | undefined });
       }
-      return { error: "알 수 없는 템플릿" };
+      const b = resolveBuilding(args, ctx);
+      if (!b) return { error: "필지를 찾을 수 없습니다" };
+      const c = ctx.cases?.[String(b.id)];
+      if (!c) return { error: `${b.dong} ${b.jibun} 은 아직 사건으로 등록되지 않았습니다 — 조사 목록에 담거나 현장조사를 먼저 기록하세요` };
+      switch (tpl) {
+        case "prior_notice": return buildPriorNotice({ c, dueDays: args.dueDays as number | undefined, content: args.content as string | undefined });
+        case "correction_order": return buildCorrectionOrder({ c, content: args.content as string | undefined, deadlineDays: args.deadlineDays as number | undefined });
+        case "fine_warning": return buildFineWarning({ c, deadlineDays: args.deadlineDays as number | undefined });
+        case "fine_imposition": return buildFineImposition({ c });
+        case "ledger": return buildLedger({ c });
+        default: return { error: "알 수 없는 템플릿" };
+      }
+    },
+  },
+  {
+    name: "case_status",
+    description: "사건(필지)의 현재 단계·다음 할 일·다음 단계로 갈 수 있는지(법정 전제)를 돌려준다. id 없으면 전체 사건 요약(단계별 건수, 오늘 할 일).",
+    parameters: { type: "object", properties: { id: { type: "number" }, pnu: { type: "string" } } },
+    run: (args, ctx) => {
+      const all = Object.values(ctx.cases ?? {}) as Case[];
+      if (args.id == null && !args.pnu && !ctx.id) {
+        const byStage: Record<string, number> = {};
+        for (const c of all) byStage[c.stage] = (byStage[c.stage] ?? 0) + 1;
+        return { total: all.length, byStage, todos: todosOf(all).slice(0, 15) };
+      }
+      const b = resolveBuilding(args, ctx);
+      if (!b) return { error: "필지를 찾을 수 없습니다" };
+      const c = (ctx.cases?.[String(b.id)] ?? null) as Case | null;
+      if (!c) return { id: b.id, pnu: b.pnu, registered: false, message: "사건 미등록 — 조사 목록에 담기 또는 현장조사 기록으로 등록" };
+      const nexts = (["PLANNED", "SURVEYED", "NOTICED", "ORDERED", "WARNED", "FINED", "CLOSED"] as const).map((to) => ({ to, label: STAGE_META[to].label, ...canAdvance(c, to) }));
+      return { id: c.id, pnu: c.pnu, stage: c.stage, stageLabel: STAGE_META[c.stage].label, survey: c.survey ?? null, notice: c.notice ?? null, order: c.order ?? null, warn: c.warn ? { ...c.warn } : null, fine: c.fine ?? null, closed: c.closed ?? null, history: c.history.slice(-8), canAdvance: nexts.filter((n) => n.ok || n.reason), todos: todosOf([c]) };
     },
   },
   {
@@ -147,7 +180,7 @@ export const TOOLS: ToolDef[] = [
     description: "문서 초안의 필수 기재사항 누락을 점검한다 (BR-C2). doc_render 와 같은 인자를 받아 체크리스트만 돌려준다.",
     parameters: {
       type: "object",
-      properties: { template: { type: "string", enum: ["survey_plan", "prior_notice"] }, ids: { type: "array", items: { type: "number" } }, id: { type: "number" } },
+      properties: { template: { type: "string", enum: ["survey_plan", "survey_report", "prior_notice", "correction_order", "fine_warning", "fine_imposition", "ledger"] }, ids: { type: "array", items: { type: "number" } }, id: { type: "number" } },
       required: ["template"],
     },
     run: async (args, ctx) => {
@@ -196,6 +229,7 @@ function summarize(name: string, r: unknown): string {
     case "rules_rag": return `조문 ${(o.citations as unknown[]).length}건`;
     case "doc_render": return `${o.template} · 누락 ${(o.missing as string[]).length}건`;
     case "doc_check": return `누락 ${(o.missing as string[]).length}건`;
+    case "case_status": return o.stageLabel ? `단계 ${o.stageLabel}` : `사건 ${o.total}건`;
     default: return "완료";
   }
 }

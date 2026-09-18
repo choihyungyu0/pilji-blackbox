@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl, { type Map as MLMap, type MapMouseEvent } from "maplibre-gl";
 import { useApp } from "@/store/app-store";
 import { useBuildings } from "@/store/buildings";
+import { useCases } from "@/store/cases";
 import { ANYANG_CENTER } from "@/lib/geo";
 import type { Building, Mode } from "@/lib/types";
 import { HEIGHT_EXPR, VWORLD_KEY, baseStyle, colorExpr, filterExpr, COLORS } from "./map-style";
@@ -35,7 +36,7 @@ export function MapView({ mode, onSatFallback }: Props) {
   const selectedId = useApp((s) => s.selectedId);
   const select = useApp((s) => s.select);
   const flyTo = useApp((s) => s.flyTo);
-  const verdicts = useApp((s) => s.verdicts);
+  const cases = useCases((s) => s.cases);
   const list = useApp((s) => s.list);
 
   /* ── 지도 생성 ── */
@@ -246,14 +247,14 @@ export function MapView({ mode, onSatFallback }: Props) {
     const map = mapRef.current;
     if (!map || !ready || !map.getSource("bldg") || mode !== "officer") return;
     const next = new Set<number>();
-    for (const [k, v] of Object.entries(verdicts)) {
-      const id = Number(k);
-      next.add(id);
-      map.setFeatureState({ source: "bldg", id }, { verdict: v.verdict });
+    for (const c of Object.values(cases)) {
+      if (!c.survey) continue;
+      next.add(c.id);
+      map.setFeatureState({ source: "bldg", id: c.id }, { verdict: c.survey.verdict });
     }
     for (const id of appliedVerdicts.current) if (!next.has(id)) map.setFeatureState({ source: "bldg", id }, { verdict: null });
     appliedVerdicts.current = next;
-  }, [ready, verdicts, mode, index]);
+  }, [ready, cases, mode, index]);
 
   /* ── 조사 목록 번호 핀 ── */
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Building, Mode, Verdict, VerdictRecord } from "@/lib/types";
+import type { Building, Mode, Verdict } from "@/lib/types";
 
 /** 지도 레이어 토글 (LYR-01~08). P1 레이어는 데이터가 없으면 UI 에서 비활성 */
 export type LayerKey = "viol" | "cand" | "ledger" | "gb" | "slopes" | "hjd" | "facilities" | "grid";
@@ -20,7 +20,17 @@ export type Filters = {
 
 export type ListItem = { id: number; pnu: string; addedBy: "auto" | "manual"; rank?: number };
 
-export type LogEntry = { at: string; kind: "agent" | "doc" | "verdict" | "list" | "auth"; summary: string };
+export type LogEntry = { at: string; kind: "agent" | "doc" | "verdict" | "list" | "auth" | "case"; summary: string };
+
+/** 문서 공통 기관·결재선 — 한 번 입력해 모든 문서에 쓴다 (개인 성명은 넣지 않아도 됨, 직위만 권장) */
+export type OrgInfo = {
+  orgName: string; dept: string; drafter: string; reviewer: string; approver: string; coop: string;
+  orgAddr: string; orgTel: string; orgFax: string; orgEmail: string; openClass: string;
+};
+export const DEFAULT_ORG: OrgInfo = {
+  orgName: "안양시", dept: "", drafter: "", reviewer: "", approver: "", coop: "",
+  orgAddr: "", orgTel: "", orgFax: "", orgEmail: "", openClass: "부분공개(개인정보)",
+};
 
 type State = {
   mode: Mode;
@@ -39,11 +49,9 @@ type State = {
   flyTo: { lon: number; lat: number; zoom?: number; nonce: number } | null;
   requestFlyTo: (lon: number, lat: number, zoom?: number) => void;
 
-  /** 판정 (INV-02) — 건물 id 키. synced=false 면 기기 임시 보관(ST-V3) */
-  verdicts: Record<number, VerdictRecord>;
-  setVerdict: (rec: VerdictRecord) => void;
-  markSynced: (id: number, synced: boolean) => void;
-  removeVerdict: (id: number) => void;
+  /** 문서 공통 기관·결재선 */
+  org: OrgInfo;
+  setOrg: (o: Partial<OrgInfo>) => void;
 
   /** 조사 목록 (INV-01) */
   list: ListItem[];
@@ -81,16 +89,8 @@ export const useApp = create<State>()(
       flyTo: null,
       requestFlyTo: (lon, lat, zoom) => set({ flyTo: { lon, lat, zoom, nonce: Date.now() } }),
 
-      verdicts: {},
-      setVerdict: (rec) => set((s) => ({ verdicts: { ...s.verdicts, [rec.id]: rec } })),
-      markSynced: (id, synced) =>
-        set((s) => (s.verdicts[id] ? { verdicts: { ...s.verdicts, [id]: { ...s.verdicts[id], synced } } } : {})),
-      removeVerdict: (id) =>
-        set((s) => {
-          const v = { ...s.verdicts };
-          delete v[id];
-          return { verdicts: v };
-        }),
+      org: DEFAULT_ORG,
+      setOrg: (o) => set((s) => ({ org: { ...s.org, ...o } })),
 
       list: [],
       listMeta: { dong: null, grades: [], n: 0, createdAt: null },
@@ -112,7 +112,7 @@ export const useApp = create<State>()(
     }),
     {
       name: "pilji-blackbox-v1",
-      partialize: (s) => ({ verdicts: s.verdicts, list: s.list, listMeta: s.listMeta, log: s.log, layers: s.layers, colorMode: s.colorMode }),
+      partialize: (s) => ({ org: s.org, list: s.list, listMeta: s.listMeta, log: s.log, layers: s.layers, colorMode: s.colorMode }),
     }
   )
 );

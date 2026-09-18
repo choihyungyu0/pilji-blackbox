@@ -5,6 +5,8 @@ import Link from "next/link";
 import { X, ClipboardPlus, MessageSquareText, Crosshair } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { useBuildings, buildingsWithin } from "@/store/buildings";
+import { useCases } from "@/store/cases";
+import { STAGE_META } from "@/lib/stages";
 import { fmt, floorsText, kstDate } from "@/lib/format";
 import { distanceM } from "@/lib/geo";
 import { VERDICT_LABEL, type Mode } from "@/lib/types";
@@ -29,7 +31,8 @@ export function ParcelPanel({ mode }: { mode: Mode }) {
   const requestFlyTo = useApp((s) => s.requestFlyTo);
   const addToList = useApp((s) => s.addToList);
   const list = useApp((s) => s.list);
-  const verdict = useApp((s) => (selectedId != null ? s.verdicts[selectedId] : undefined));
+  const kase = useCases((s) => (selectedId != null ? s.cases[selectedId] : undefined));
+  const ensure = useCases((s) => s.ensure);
   const index = useBuildings((s) => s.index);
   const b = selectedId != null ? index?.byId.get(selectedId) ?? null : null;
   const tl = useTimeline(b?.pnu ?? null);
@@ -84,10 +87,12 @@ export function ParcelPanel({ mode }: { mode: Mode }) {
             ))}
           </div>
         )}
-        {verdict && officer && (
-          <p className="rounded-md bg-ink px-3 py-1.5 text-xs text-white">
-            현장 판정: <b>{VERDICT_LABEL[verdict.verdict]}</b> · {kstDate(verdict.at)}{verdict.synced ? "" : " · 기기 임시 보관"}
-          </p>
+        {kase && officer && (
+          <Link href={`/cases/${kase.id}`} className="flex items-center gap-2 rounded-md bg-ink px-3 py-1.5 text-xs text-white hover:bg-ink/90">
+            <span className="rounded px-1.5 py-0.5 text-[10px] font-bold" style={{ background: STAGE_META[kase.stage].color }}>{STAGE_META[kase.stage].label}</span>
+            {kase.survey ? <>현장 판정 <b>{VERDICT_LABEL[kase.survey.verdict]}</b> · {kstDate(kase.survey.at)}{kase.synced ? "" : " · 기기 보관"}</> : <>사건 등록됨 · 판정 없음</>}
+            <span className="ml-auto underline">사건 열기 →</span>
+          </Link>
         )}
         {b.viol === "Y" && <p className="rounded-md bg-sig-viol/10 px-3 py-1.5 text-xs font-semibold text-sig-viol">위반건축물 표기 있음 (건물통합정보 A20=Y)</p>}
 
@@ -174,12 +179,15 @@ export function ParcelPanel({ mode }: { mode: Mode }) {
       </div>
 
       {officer && (
-        <footer className="grid grid-cols-2 gap-2 border-t border-border p-2">
-          <button className="btn" disabled={inList} onClick={() => addToList(b)}>
-            <ClipboardPlus className="size-3.5" /> {inList ? "목록에 있음" : "조사 목록에 담기"}
+        <footer className="grid grid-cols-3 gap-1.5 border-t border-border p-2">
+          <button className="btn" disabled={inList} onClick={() => { addToList(b); ensure(b, b.cand ? "ai" : "manual"); }} title="조사 계획에 넣기 (후보 단계 사건 등록)">
+            <ClipboardPlus className="size-3.5" /> {inList ? "목록에 있음" : "조사 목록"}
           </button>
-          <Link href={`/agent?id=${b.id}`} className="btn-primary">
-            <MessageSquareText className="size-3.5" /> 에이전트에게 묻기
+          <Link href={`/cases/${b.id}`} className="btn-primary" onClick={() => ensure(b, kase?.origin ?? (b.cand ? "ai" : "manual"))}>
+            사건 {kase ? "열기" : "등록"}
+          </Link>
+          <Link href={`/agent?id=${b.id}`} className="btn">
+            <MessageSquareText className="size-3.5" /> 에이전트
           </Link>
         </footer>
       )}

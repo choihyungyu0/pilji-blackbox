@@ -3,7 +3,7 @@ import { OFFICER_COOKIE, sessionSecret, verifySessionToken } from "@/lib/session
 
 /**
  * SEC-01 공개/담당자 모드 분리.
- * 담당자 전용: /investigate, /agent, /api/agent, /api/doc, /api/verdict, /api/candidates, /data/officer/*
+ * 담당자 전용: /work, /cases, /print, /investigate, /agent, /api/agent, /api/doc, /api/verdict, /api/candidates, /data/officer/*
  * 공개 URL 은 로그인 없이 열린다 (/, /map, /dashboard, /about, /data/public/*).
  */
 export async function middleware(req: NextRequest) {
@@ -21,5 +21,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/investigate/:path*", "/agent/:path*", "/api/agent/:path*", "/api/doc/:path*", "/api/verdict/:path*", "/api/candidates/:path*", "/data/officer/:path*"],
+  matcher: ["/work/:path*", "/cases/:path*", "/print/:path*", "/investigate/:path*", "/agent/:path*", "/api/agent/:path*", "/api/doc/:path*", "/api/verdict/:path*", "/api/candidates/:path*", "/data/officer/:path*"],
 };

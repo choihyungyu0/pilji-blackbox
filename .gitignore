@@ -32,3 +32,4 @@ yarn-error.log*
 # 원천 대용량 (핸드오프 raw/ 는 복사하지 않음)
 /raw/
 /data/anyang_opendata/original/
+/out/
