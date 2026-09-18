@@ -28,5 +28,5 @@ export const SOURCES: SourceRow[] = [
   { group: "브이월드 API", provider: "국토교통부 브이월드", name: "지오코더 API", url: "https://www.vworld.kr/dev/v4dv_geocoderguide2_s001.do", asof: "2026-09-18 조회", license: "브이월드 오픈API 이용약관", use: "사고 주소·공공건축물·대피시설·급수시설 좌표화" },
   { group: "기타", provider: "행정동 경계(통계청 SGIS 기반)", name: "안양시 행정동 31개 경계", url: "https://sgis.kostat.go.kr/", asof: "핸드오프 2026-09-17", license: "공공누리", use: "지도 경계선·동 이름 라벨" },
   { group: "기타", provider: "언론 보도·안양시 2026 주요업무보고", name: "안양 관내 사고 이력 8건 (2022.8~2026.7)", url: "https://www.anyang.go.kr/", asof: "각 기사 일자", license: "출처 링크 인용", use: "타임라인 사고 이벤트 (박달동 139-137 등)", limit: "지점 좌표 3건만. 박달동 축대 붕괴 원인·소유 관계는 공식 미확인" },
-  { group: "법령", provider: "법제처 국가법령정보센터", name: "건축법 79·80조, 행정절차법 14·21조, 개발제한구역법 30조·30조의2, 급경사지법 시행령 2조", url: "https://www.law.go.kr/", asof: "2026-09-17 조회", license: "공공저작물", use: "근거 조문 RAG·문서 초안 인용" },
+  { group: "법령", provider: "법제처 국가법령정보센터", name: "건축법 79·80·80조의2, 건축법 시행령 115·115조의2·115조의3, 시행규칙 40조, 행정절차법 14·21·26·27조, 개발제한구역법 30조·30조의2, 급경사지법 시행령 2조, 안양시 건축 조례 37조 (15개 조문)", url: "https://www.law.go.kr/", asof: "2026-09-17 조회", license: "공공저작물", use: "근거 조문 RAG·문서 초안 인용" },
 ];

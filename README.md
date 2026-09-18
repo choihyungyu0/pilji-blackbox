@@ -43,7 +43,7 @@ npm run templates     # HWPX 템플릿 (python-hwpx)
 
 | 경로 | 화면 | 모드 |
 |---|---|---|
-| `/` | WF0 모드 선택 — 공개로 보기 / 담당자 PIN (5회 오류 60초 잠금) | 공개 |
+| `/` | WF0 모드 선택 — 공개로 보기 / 담당자 PIN (5회 오류 60초 잠금 — 메모리·서명 쿠키·Supabase 3겹, 서버리스에서도 유지) | 공개 |
 | `/work` | 업무 홈 — 오늘 할 일(기한 경과 우선), 단계 파이프라인, 최근 작업 | 담당자 |
 | `/map` | WF1 찾기 지도 + WF2 필지 패널 — 위성 배경·3D 건물·레이어·색상 기준·필터·지번 검색·타임라인·주변 현황 · "사건 등록/열기" | 공개(격자) / 담당자(필지 후보·점수) |
 | `/investigate` | WF4 조사 계획 — ①후보 뽑기 ②기안문(→조사 계획 단계) ③판정 입력 ④결과 보고, CSV, 번호 핀 | 담당자 |
@@ -68,8 +68,8 @@ P1 미구현(데이터 미확보): DAT-06 도로굴착, DAT-07 지반침하, DAT
 - **지도: MapLibre GL JS 단독 (deck.gl 미사용)** — 27,713동 3D 돌출은 MapLibre 내장 `fill-extrusion`(높이 = 층수×3m → 높이 → 3m)이 의존성 없이 더 가볍고, `feature-state` 로 선택·판정 색을 즉시 반영하며 GeoJSON 소스가 타일 분할을 자동으로 한다. deck.gl 상호운용 층을 두는 이득이 없어 제외.
 - **IS-01 임시 결정: PMTiles 대신 정적 GeoJSON** — Windows 작업환경에 tippecanoe 가 없어 `public/data/{public,officer}/buildings.geojson`(각 15.9/18.7MB, gzip 2.6/3.0MB)을 Vercel 정적 파일로 제공. 로컬 첫 로드 1.4초(캐시 후 ~0.2초). 좌표 6자리·NaN→null 정리.
 - **IS-09 공개 범위: 파일 자체를 분리** — 공개 파일에는 `score/cand/grade/f_*` 컬럼이 없고, 담당자 파일(`/data/officer/*`)은 미들웨어가 세션 쿠키로 막는다. 화면 숨김이 아니라 네트워크에서 차단.
-- **IS-07 LLM: OpenAI `gpt-4o-mini`(환경변수)** 도구 호출 8종. BR-A1 은 `lib/guard.ts` 로 답변 속 숫자를 도구 결과와 대조해 없는 문장을 삭제.
-- **IS-08 법령 원문: 국가법령정보센터 현행 조문을 `data/laws/laws.json` 에 수록**(2026-09-17 조회) — 건축법 79·80, 행정절차법 14·21, 개발제한구역법 30·30의2, 급경사지법 시행령 2. 키워드 점수 검색(임베딩 없음).
+- **IS-07 LLM: OpenAI `gpt-4o-mini`(환경변수)** 도구 호출 9종. BR-A1 은 `lib/guard.ts` 로 답변 속 숫자를 도구 결과와 대조해 없는 문장을 삭제.
+- **IS-08 법령 원문: 국가법령정보센터 현행 조문 15개를 `data/laws/laws.json` 에 수록**(2026-09-17~18 조회·2026-09-18 재대조) — 건축법 79·80·80조의2, 시행령 115·115조의2·115조의3, 시행규칙 40, 행정절차법 14·21·26·27, 개발제한구역법 30·30의2, 급경사지법 시행령 2, 안양시 건축 조례 37. 키워드 점수 검색(임베딩 없음).
 - **IS-10 문서 서식: 표준 서식으로 자체 제작** (안양시 실제 서식 미확보). python-hwpx 로 만든 정품 HWPX 템플릿에 브라우저(JSZip)가 토큰만 치환. 사전통지서는 행정절차법 21조① 기재사항 순서, 당사자 칸은 항상 공란.
 - **IS-11 서비스 이름: "필지 블랙박스"(가칭 유지)**.
 - Supabase 는 선택 — 판정 저장 실패 시 기기(localStorage) 보관 + 재시도(ST-V3). 스키마 `supabase/schema.sql`.
@@ -86,11 +86,11 @@ P1 미구현(데이터 미확보): DAT-06 도로굴착, DAT-07 지반침하, DAT
 ```
 app/            (map | investigate | agent | dashboard | about) · api/(auth|parcel|timeline|candidates|verdict|doc|laws|agent)
 components/     map/ parcel/ investigate/ agent/ dashboard/ app/
-lib/            data-server(정적 인덱스) · timeline · laws · docs · guard(BR-A1) · pii · session · hwpx · tools/(에이전트 도구 8종)
-store/          app-store(모드·레이어·판정·조사목록·로그, 기기 보관) · buildings(건물 인덱스)
+lib/            data-server(정적 인덱스) · timeline · laws · docs · stages(사건 단계·이행강제금) · guard(BR-A1) · pii · session · hwpx · tools/(에이전트 도구 9종)
+store/          app-store(모드·레이어·조사목록·기관정보·로그, 기기 보관) · cases(사건 8단계) · buildings(건물 인덱스)
 data/           핸드오프 원본 + derived/(빌드 산출) + laws/
 public/data/    앱이 읽는 정적 파일 (officer/ 는 미들웨어 보호)
-public/templates/ HWPX 템플릿 2종
+public/templates/ HWPX 템플릿 7종
 scripts/        build_data.py · fetch_vworld_layers.py · make_hwpx_templates.py · analysis_reference/(모델 재현 코드)
 docs/           기능명세서·설계서·데이터사전·시연 시나리오·리서치
 ```
