@@ -44,7 +44,7 @@ export default function AboutPage() {
             <Row k="변수" v={m.features.join(", ")} />
             <Row k="공간 검증" v={`${m.spatial_cv.design} · AUC ${m.spatial_cv.auc} · AP ${m.spatial_cv.ap} · 상위 20% 조사 시 위반 46.8% 포착 (기저율 ${(m.spatial_cv.base * 100).toFixed(1)}%)`} />
             <Row k="시간 검증" v={`${m.temporal.design} · AUC ${m.temporal.auc} · AP ${m.temporal.ap} · 신규 위반 88동 중 상위 20%에서 41동(46.6%)`} />
-            <Row k="후보 정의" v={`위반 표기 없는 건물 중 점수 ≥ ${m.thresholds.cand_top10}(상위 10%) → 1,918동. A ≥ ${m.thresholds.gradeA_top5}(상위 5%) 913동, B 1,005동`} />
+            <Row k="후보 정의" v={`전체 점수 분포의 상위 10% 임계값(≥ ${m.thresholds.cand_top10}) 이상이면서 위반 표기가 없는 건물 → 1,918동. A = 상위 5% 임계값(≥ ${m.thresholds.gradeA_top5}) 913동, B 1,005동`} />
             <Row k="점수 비대상" v="대장 미연계 4,112동, 위반 표기 1,573동 (BR-M2)" />
             <Row k="재학습" v="P1 — 판정 누적 ≥20건, 위반·정상 각 ≥5건일 때 (BR-M3). 현재 앱은 사전 계산값만 표시" />
           </dl>

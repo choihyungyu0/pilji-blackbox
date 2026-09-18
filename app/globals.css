@@ -112,7 +112,8 @@
   }
 }
 
-@layer utilities {
+/* 컴포넌트 클래스는 components 레이어 — 같은 요소의 유틸리티(bg-ink·h-10·border-0 …)가 항상 이긴다 */
+@layer components {
   .kicker {
     font-size: 0.7rem;
     font-weight: 600;
@@ -134,7 +135,8 @@
   .btn-primary {
     @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50;
   }
-  .btn-sm {
+  .btn.btn-sm,
+  .btn-primary.btn-sm {
     @apply h-7 px-2 text-xs;
   }
   .input {

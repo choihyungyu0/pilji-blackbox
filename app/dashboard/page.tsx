@@ -29,7 +29,7 @@ export default function DashboardPage() {
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi label="상위 20% 조사 시 위반 포착" value="46.8%" note="공간 5-fold 교차검증 (기저 6.7%, 리프트 2.34)" />
         <Kpi label="1년 뒤 신규 위반 포착" value="46.6%" note="2025.9 학습 → 2026.9 신규 88동 중 41동 (상위 20%)" />
-        <Kpi label="AI 후보" value={`${t.cand.toLocaleString()}동`} note={`A ${t.A} · B ${t.B.toLocaleString()} (위반 표기 없는 건물의 상위 10%)`} />
+        <Kpi label="AI 후보" value={`${t.cand.toLocaleString()}동`} note={`A ${t.A} · B ${t.B.toLocaleString()} (위반 표기 없는 건물 중 점수 상위 10% 임계값 이상)`} />
         <Kpi label="1년 변화 (2025.9→2026.9)" value={`신규 ${ch.viol_added} · 해제 ${ch.viol_cleared}`} note={`신규 건물 ${ch.new_building} · 두 스냅숏 A20 비교`} />
       </section>
 

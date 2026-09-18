@@ -56,7 +56,7 @@ export function ScoreCard({ b }: { b: Building }) {
               <p className="badge-cand mt-1">후보(현장 확인 전)</p>
             </>
           ) : (
-            <span className="inline-block rounded-md bg-muted px-2 py-1 text-xs font-semibold" title="상위 10% 밖 — 후보 아님(점수만 표시)">
+            <span className="inline-block rounded-md bg-muted px-2 py-1 text-xs font-semibold" title="점수 상위 10% 임계값(0.165) 미만 — 후보 아님(점수만 표시)">
               C · 후보 아님
             </span>
           )}

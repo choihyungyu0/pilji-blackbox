@@ -45,7 +45,7 @@ const bldgInfo = (b: Building) =>
   `용도 ${s(b.use)} · 구조 ${s(b.struct)} · 지상 ${s(b.fl_up)}층/지하 ${s(b.fl_dn)}층 · 연면적 ${b.gfa == null ? "정보없음" : b.gfa + "㎡"} · 사용승인 ${s(b.approve)}`;
 
 const BLDG_SRC = `국토교통부 GIS건물통합정보(브이월드, CC BY, 기준 ${DATA_ASOF})`;
-const MODEL_SRC = "AI 우선조사 점수 — HistGradientBoosting, 공간 5-fold 교차검증 AUC 0.728 (후보 = 위반 표기 없는 건물 중 상위 10%)";
+const MODEL_SRC = "AI 우선조사 점수 — HistGradientBoosting, 공간 5-fold 교차검증 AUC 0.728 (후보 = 점수 상위 10% 임계값 이상이면서 위반 표기 없는 건물)";
 const cite = (id: string, para = 0) => toCitation(lawById(id)!, para);
 const evLine = (ev: string[]) => ev.map((e, i) => `${i + 1}) ${e}`).join("  ");
 

@@ -8,6 +8,9 @@ import { IntegrationStatus } from "@/components/app/integration-status";
 /** WF0 모드 선택 — 공개 모드는 입력 없이 진입, 담당자 모드는 PIN (SEC-01). */
 export default async function Home({ searchParams }: { searchParams: Promise<{ next?: string; officer?: string }> }) {
   const sp = await searchParams;
+  // ?next= 는 같은 사이트 경로만 허용 (열린 리다이렉트 방지)
+  const next = sp.next && /^\/(?!\/)/.test(sp.next) ? sp.next : undefined;
+  const publicNext = next && /^\/(map|dashboard|about)(\?|$)/.test(next) ? next : undefined;
   const jar = await cookies();
   const officer = await verifySessionToken(jar.get(OFFICER_COOKIE)?.value, sessionSecret());
   const pinConfigured = Boolean(process.env.ADMIN_PIN && process.env.ADMIN_PIN.length >= 6);
@@ -29,7 +32,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
           <Stat label="AI 후보" value={`${t.cand.toLocaleString()}동`} note={`A ${t.A} · B ${t.B.toLocaleString()}`} />
         </dl>
         <div className="mt-8 flex flex-wrap gap-2">
-          <Link href="/map" data-tour="public-btn" className="btn-primary h-10 px-4">
+          <Link href={publicNext || "/map"} data-tour="public-btn" className="btn-primary h-10 px-4">
             공개로 보기 →
           </Link>
           <Link href="/dashboard" className="btn h-10 px-4">
@@ -51,12 +54,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
         {officer ? (
           <div className="mt-4 space-y-2 text-sm">
             <p className="rounded-md bg-brand/10 px-3 py-2 text-brand">담당자 모드로 로그인되어 있습니다.</p>
-            <Link href={sp.next || "/work"} className="btn-primary w-full">
+            <Link href={next || "/work"} className="btn-primary w-full">
               업무 홈으로 이동
             </Link>
           </div>
         ) : pinConfigured ? (
-          <PinForm next={sp.next || "/work"} autoFocus={sp.officer === "1"} />
+          <PinForm next={next || "/work"} autoFocus={sp.officer === "1"} />
         ) : (
           <p className="mt-4 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
             담당자 모드 비활성 — 서버에 ADMIN_PIN(6자리 이상)이 설정되지 않았습니다.
