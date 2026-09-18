@@ -3,6 +3,8 @@ import { OFFICER_COOKIE, sessionSecret, verifySessionToken } from "@/lib/session
 import { Nav } from "./nav";
 import { ModeSync } from "./mode-sync";
 import { Toast } from "./toast";
+import { Suspense } from "react";
+import { Tour, FirstVisitGate } from "./tour";
 import type { Mode } from "@/lib/types";
 
 /** 전역 틀 — 세션 쿠키로 모드를 판정해 상단 바와 스토어에 넘긴다 (SEC-01). */
@@ -18,6 +20,10 @@ export async function Shell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <Toast />
+      <Suspense fallback={null}>
+        <FirstVisitGate />
+        <Tour />
+      </Suspense>
     </div>
   );
 }

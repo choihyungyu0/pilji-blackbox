@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { AlertTriangle, CheckCircle2, Lock } from "lucide-react";
-import { useApp } from "@/store/app-store";
 import { emptyEstimate, useCases } from "@/store/cases";
 import { addDays, canAdvance, daysUntil, estimateFine, fmtWon, todayISO } from "@/lib/stages";
 import { caseForDoc, useDocGen } from "@/lib/client-docs";
@@ -25,7 +24,7 @@ const DateRecord = ({ label, value, onChange, hint }: { label: string; value?: s
 );
 
 // ───────────────────────────────────────────── 사전통지
-export function NoticePanel({ c, b }: { c: Case; b: Building }) {
+export function NoticePanel({ c }: { c: Case; b: Building }) {
   const setNotice = useCases((s) => s.setNotice);
   const update = useCases((s) => s.update);
   const { doc, busy, gen } = useDocGen();

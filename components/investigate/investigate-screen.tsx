@@ -137,7 +137,7 @@ export function InvestigateScreen() {
     <div className="mx-auto grid w-full max-w-[1600px] gap-3 p-3 lg:grid-cols-[1fr_360px] lg:p-4">
       <section className="min-w-0 space-y-3">
         {/* ① 후보 뽑기 */}
-        <div className="card p-3">
+        <div data-tour="pick" className="card p-3">
           <p className="label mb-1.5">① 조사 대상 뽑기 — AI 점수 내림차순 (건축법 79조⑤ 실태조사 대상)</p>
           <div className="flex flex-wrap items-end gap-2">
             <div>
@@ -170,9 +170,9 @@ export function InvestigateScreen() {
 
         {rows.length > 0 && (
           <>
-            <OrgForm />
+            <div data-tour="org"><OrgForm /></div>
             {/* ② 계획 기안 */}
-            <div className="card p-3">
+            <div data-tour="plan" className="card p-3">
               <p className="label mb-1.5">② 현장조사 계획 기안 — 시행령 115조② (목적·기간·대상·방법) · 결재 후 현장</p>
               <div className="grid gap-1.5 sm:grid-cols-[auto_1fr_auto]">
                 <input type="date" className="input h-9 text-xs" value={planDate} onChange={(e) => setPlanDate(e.target.value)} aria-label="조사 예정일" />
@@ -184,7 +184,7 @@ export function InvestigateScreen() {
             </div>
 
             {/* ③ 현장조사 */}
-            <div className="card overflow-x-auto">
+            <div data-tour="survey-table" className="card overflow-x-auto">
               <div className="flex flex-wrap items-center gap-1.5 border-b border-border p-2 text-xs">
                 <span className="label">③ 현장조사 판정</span>
                 <span className="chip">총 {stats.total}</span>
@@ -194,7 +194,7 @@ export function InvestigateScreen() {
                 <span className="chip text-green-700">정상 {stats.NORMAL}</span>
                 <span className="chip">대상아님 {stats.NOT_TARGET}</span>
                 <span className="chip text-violet-700">보류 {stats.HOLD}</span>
-                <button className="btn btn-sm ml-auto" disabled={report.busy || stats.pending === stats.total} onClick={makeReport}><ClipboardCheck className="size-3.5" /> ④ 결과 보고 생성</button>
+                <button data-tour="report" className="btn btn-sm ml-auto" disabled={report.busy || stats.pending === stats.total} onClick={makeReport}><ClipboardCheck className="size-3.5" /> ④ 결과 보고 생성</button>
               </div>
               {report.doc && <div className="p-2"><DocCard doc={report.doc} /></div>}
               <table className="w-full min-w-[900px] text-xs">

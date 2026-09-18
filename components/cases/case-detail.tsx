@@ -66,12 +66,12 @@ export function CaseDetail({ id }: { id: number }) {
     <div className="mx-auto grid w-full max-w-[1600px] gap-3 p-3 lg:grid-cols-[1fr_380px] lg:p-4">
       <section className="min-w-0 space-y-3">
         {/* 헤더 */}
-        <div className="card p-3">
+        <div data-tour="case-head" className="card p-3">
           <div className="flex flex-wrap items-start gap-2">
             <Link href="/cases" className="btn btn-sm"><ArrowLeft className="size-3.5" /> 사건 목록</Link>
             <div className="min-w-0 flex-1">
               <p className="label">사건 · 건물 {b.id} · PNU {b.pnu} · 등록 {c.createdAt.slice(0, 10)} ({c.origin === "ai" ? "AI 후보" : c.origin === "manual" ? "담당자 추가" : "민원"})</p>
-              <h1 className="text-lg font-bold">{b.dong} {b.san === "산" ? "산 " : ""}{b.jibun} <span className="text-sm font-normal text-muted-foreground">· {fmt.text(b.use)} · {fmt.text(b.struct)} · 지상 {fmt.int(b.fl_up)}층 · 사용승인 {fmt.date(b.approve)}{b.gb ? " · 개발제한구역" : ""}</span></h1>
+              <h1 className="text-lg font-bold">{b.dong} {b.san === "산" ? "산 " : ""}{b.jibun} <span className="block text-sm font-normal text-muted-foreground sm:inline">{fmt.text(b.use)} · {fmt.text(b.struct)} · 지상 {fmt.int(b.fl_up)}층 · 사용승인 {fmt.date(b.approve)}{b.gb ? " · 개발제한구역" : ""}</span></h1>
             </div>
             <span className="rounded-md px-2 py-1 text-xs font-bold text-white" style={{ background: STAGE_META[c.stage].color }}>{STAGE_META[c.stage].label}</span>
           </div>
@@ -88,7 +88,7 @@ export function CaseDetail({ id }: { id: number }) {
         </div>
 
         {/* 스테퍼 */}
-        <ol className="card flex overflow-x-auto p-1.5">
+        <ol data-tour="stepper" className="card flex overflow-x-auto p-1.5">
           {STAGES.map((s, i) => {
             const m = STAGE_META[s];
             const done = i < cur || c.stage === "CLOSED";
@@ -113,7 +113,7 @@ export function CaseDetail({ id }: { id: number }) {
         <OrgForm />
 
         {/* 단계 패널 */}
-        <div className="card p-3">
+        <div data-tour="stage-panel" className="card p-3">
           <h2 className="mb-1 text-sm font-bold">{open ? `${stageIndex(open) + 1}. ${STAGE_META[open].label}` : ""}</h2>
           <p className="mb-2 text-[11px] text-muted-foreground">{open ? STAGE_META[open].law : ""}</p>
           {(open === "CANDIDATE" || open === "PLANNED") && (
@@ -152,7 +152,7 @@ export function CaseDetail({ id }: { id: number }) {
         </div>
       </section>
 
-      <aside className="space-y-3">
+      <aside data-tour="side" className="space-y-3">
         <ScoreCard b={b} />
         <section className="card p-3">
           <p className="label mb-2">필지 타임라인</p>

@@ -35,6 +35,10 @@ export function MapScreen({ mode }: { mode: Mode }) {
   useEffect(() => {
     void load(mode);
   }, [mode, load]);
+  // 좁은 화면(휴대폰·태블릿)에서는 패널이 지도를 덮으므로 접힌 채로 시작 (SSR 과 첫 렌더를 맞추려고 마운트 뒤에 접는다)
+  useEffect(() => {
+    if (window.innerWidth < 1024) setPanelOpen(false);
+  }, []);
   // 공개 모드에는 점수가 없다 → 색상 기준을 위반으로
   useEffect(() => {
     if (mode === "public" && colorMode === "score") setColorMode("viol");
@@ -53,18 +57,18 @@ export function MapScreen({ mode }: { mode: Mode }) {
 
   return (
     <div className="relative flex w-full" style={{ height: "calc(100dvh - 3rem)" }}>
-      <div className="relative h-full min-w-0 flex-1 bg-[#0b1220]">
+      <div data-tour="map" className="relative h-full min-w-0 flex-1 bg-[#0b1220]">
         {status !== "error" && <MapView mode={mode} onSatFallback={setFallback} />}
 
         {/* 좌측 컨트롤 */}
         <div className="pointer-events-none absolute left-3 top-3 z-10 flex w-[300px] max-w-[calc(100%-1.5rem)] flex-col gap-2">
-          <div className="pointer-events-auto"><SearchBar /></div>
+          <div data-tour="search" className="pointer-events-auto"><SearchBar /></div>
           <div className={cn("pointer-events-auto rounded-md border border-border bg-paper/95 shadow-sm backdrop-blur", !panelOpen && "w-fit")}>
             <div className="flex items-center gap-1 border-b border-border p-1">
-              <button onClick={() => { setTab("layers"); setPanelOpen(tab !== "layers" || !panelOpen); }} className={cn("btn btn-sm border-0", tab === "layers" && panelOpen && "bg-accent")}>
+              <button data-tour="layers" onClick={() => { setTab("layers"); setPanelOpen(tab !== "layers" || !panelOpen); }} className={cn("btn btn-sm border-0", tab === "layers" && panelOpen && "bg-accent")}>
                 <Layers className="size-3.5" /> 레이어
               </button>
-              <button onClick={() => { setTab("filter"); setPanelOpen(tab !== "filter" || !panelOpen); }} className={cn("btn btn-sm border-0", tab === "filter" && panelOpen && "bg-accent")}>
+              <button data-tour="filter" onClick={() => { setTab("filter"); setPanelOpen(tab !== "filter" || !panelOpen); }} className={cn("btn btn-sm border-0", tab === "filter" && panelOpen && "bg-accent")}>
                 <SlidersHorizontal className="size-3.5" /> 필터
               </button>
             </div>
@@ -97,14 +101,14 @@ export function MapScreen({ mode }: { mode: Mode }) {
           </div>
         )}
         {index && (
-          <div className="pointer-events-none absolute bottom-6 right-3 z-10 rounded bg-black/55 px-2 py-1 text-[10px] text-white backdrop-blur">
+          <div className="pointer-events-none absolute bottom-6 right-3 z-10 hidden rounded bg-black/55 px-2 py-1 text-[10px] text-white backdrop-blur lg:block">
             건물 {index.list.length.toLocaleString()}동 · 기준 {index.asof} · 로드 {loadedMs}ms · 출처 GIS건물통합정보(브이월드)
           </div>
         )}
       </div>
 
       {selectedId != null && (
-        <div className="absolute inset-y-0 right-0 z-30 w-full max-w-[400px] border-l border-border shadow-2xl sm:relative sm:z-auto sm:w-[400px] sm:shadow-none">
+        <div data-tour="panel" className="absolute inset-y-0 right-0 z-30 w-full max-w-[400px] border-l border-border shadow-2xl sm:relative sm:z-auto sm:w-[340px] sm:shadow-none lg:w-[400px]">
           <ParcelPanel mode={mode} />
         </div>
       )}

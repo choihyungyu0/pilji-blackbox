@@ -40,7 +40,7 @@ export function WorkHome() {
           <p className="kicker text-muted-foreground">담당자 업무 홈 · {today}</p>
           <h1 className="text-2xl font-extrabold">오늘 할 일 {todos.length}건{overdue ? <span className="ml-2 rounded bg-red-600 px-2 py-0.5 text-sm text-white">기한 경과 {overdue}</span> : null}</h1>
         </div>
-        <div className="ml-auto flex flex-wrap gap-1.5">
+        <div data-tour="quick" className="ml-auto flex flex-wrap gap-1.5">
           <Link href="/map" className="btn h-9"><MapIcon className="size-4" /> 지도에서 후보 찾기</Link>
           <Link href="/investigate" className="btn h-9"><ClipboardList className="size-4" /> 조사 목록·기안 {list.length ? `(${list.length})` : ""}</Link>
           <Link href="/cases" className="btn-primary h-9"><FileText className="size-4" /> 사건 {all.length}건</Link>
@@ -48,7 +48,7 @@ export function WorkHome() {
       </header>
 
       {/* 파이프라인 */}
-      <section className="card overflow-x-auto p-3">
+      <section data-tour="pipeline" className="card overflow-x-auto p-3">
         <ol className="flex min-w-[720px] items-stretch gap-1">
           {STAGES.map((s, i) => (
             <li key={s} className="flex flex-1 items-center gap-1">
@@ -65,7 +65,7 @@ export function WorkHome() {
       </section>
 
       <div className="grid gap-3 lg:grid-cols-[1.3fr_1fr]">
-        <section className="card p-3">
+        <section data-tour="todos" className="card p-3">
           <p className="label mb-2">할 일 (기한 경과 → 임박 → 미조사 순)</p>
           {todos.length === 0 ? (
             <div className="rounded-md bg-muted p-4 text-sm text-muted-foreground">

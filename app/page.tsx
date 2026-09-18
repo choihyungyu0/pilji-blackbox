@@ -17,19 +17,19 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
     <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-10 md:grid-cols-[1.2fr_1fr] md:py-16">
       <section>
         <p className="kicker text-muted-foreground">2026 안양시 공공데이터·AI 활용 대학생 경진대회 · 시제품</p>
-        <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">필지 블랙박스</h1>
+        <h1 data-tour="title" className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">필지 블랙박스</h1>
         <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-foreground/80">
           안양 건물 <b className="tnum">27,713</b>동의 공개 데이터를 AI로 분석해 위반건축물 우선조사 후보를 찾고, 필지별 사고·위반·공사 이력을 한 화면에
           보여주며, 담당 공무원이 결재할 현장조사 기안문·사전통지서 초안(HWPX)까지 만듭니다.
         </p>
-        <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <dl data-tour="stats" className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label="건물" value="27,713동" note={`기준 ${DATA_ASOF}`} />
           <Stat label="위반 표기" value={`${t.viol_Y.toLocaleString()}동`} note="대장 있는 23,558동의 6.7%" />
           <Stat label="대장 미연계" value={`${t.ledger_false.toLocaleString()}동`} note="14.8%" />
           <Stat label="AI 후보" value={`${t.cand.toLocaleString()}동`} note={`A ${t.A} · B ${t.B.toLocaleString()}`} />
         </dl>
         <div className="mt-8 flex flex-wrap gap-2">
-          <Link href="/map" className="btn-primary h-10 px-4">
+          <Link href="/map" data-tour="public-btn" className="btn-primary h-10 px-4">
             공개로 보기 →
           </Link>
           <Link href="/dashboard" className="btn h-10 px-4">
@@ -45,7 +45,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
         </p>
       </section>
 
-      <section className="card p-5 md:mt-10">
+      <section data-tour="officer-card" className="card p-5 md:mt-10">
         <h2 className="text-base font-bold">담당자 모드</h2>
         <p className="mt-1 text-xs text-muted-foreground">안양시 건축과·도시계획과 담당자용. 데모 비밀번호(6자리 이상)로 진입합니다.</p>
         {officer ? (
@@ -62,7 +62,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
             담당자 모드 비활성 — 서버에 ADMIN_PIN(6자리 이상)이 설정되지 않았습니다.
           </p>
         )}
-        <div className="mt-4 rounded-md border border-border p-2.5">
+        <div data-tour="status" className="mt-4 rounded-md border border-border p-2.5">
           <p className="label mb-1">연동 상태</p>
           <IntegrationStatus compact />
         </div>

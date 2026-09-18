@@ -114,7 +114,7 @@ export function ParcelPanel({ mode }: { mode: Mode }) {
           <p className="mt-2 text-[10px] text-muted-foreground">출처 국토교통부 GIS건물통합정보(브이월드, CC BY) · 기준 {index?.asof} · 결측은 "정보없음"</p>
         </section>
 
-        {officer ? <ScoreCard b={b} /> : (
+        {officer ? <div data-tour="score"><ScoreCard b={b} /></div> : (
           <section className="card p-3 text-xs text-muted-foreground">
             공개 모드 — AI 후보·점수는 필지 단위로 표시하지 않습니다(100m 격자 집계만). 담당자 모드에서 점수·근거·판정을 볼 수 있습니다.
           </section>
@@ -179,7 +179,7 @@ export function ParcelPanel({ mode }: { mode: Mode }) {
       </div>
 
       {officer && (
-        <footer className="grid grid-cols-3 gap-1.5 border-t border-border p-2">
+        <footer data-tour="panel-actions" className="grid grid-cols-3 gap-1.5 border-t border-border p-2">
           <button className="btn" disabled={inList} onClick={() => { addToList(b); ensure(b, b.cand ? "ai" : "manual"); }} title="조사 계획에 넣기 (후보 단계 사건 등록)">
             <ClipboardPlus className="size-3.5" /> {inList ? "목록에 있음" : "조사 목록"}
           </button>

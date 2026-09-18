@@ -108,7 +108,7 @@ export function AgentScreen() {
     <div className="mx-auto grid w-full max-w-[1600px] gap-3 p-3 lg:grid-cols-[1fr_420px] lg:p-4">
       <section className="flex min-h-[70dvh] flex-col">
         {/* 컨텍스트 */}
-        <div className="card flex flex-wrap items-center gap-2 p-2.5 text-xs">
+        <div data-tour="agent-ctx" className="card flex flex-wrap items-center gap-2 p-2.5 text-xs">
           <span className="label">컨텍스트</span>
           {index ? (
             <select className="input h-8 text-xs" value={selectedId ?? ""} onChange={(e) => setSelectedId(e.target.value ? Number(e.target.value) : null)} aria-label="필지 선택">
@@ -138,7 +138,7 @@ export function AgentScreen() {
         )}
 
         {/* 대화 */}
-        <div className="card mt-2 flex min-h-0 flex-1 flex-col">
+        <div data-tour="agent-chat" className="card mt-2 flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
             {msgs.length === 0 && (
               <div className="text-xs text-muted-foreground">
@@ -210,7 +210,7 @@ export function AgentScreen() {
         </div>
       </section>
 
-      <aside className="lg:sticky lg:top-16 lg:self-start">
+      <aside data-tour="agent-docs" className="lg:sticky lg:top-16 lg:self-start">
         <DocPanel selected={selected} />
       </aside>
     </div>
