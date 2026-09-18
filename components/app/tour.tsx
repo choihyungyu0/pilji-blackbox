@@ -32,8 +32,8 @@ function stepsFor(path: string, t: TourCtx): DriveStep[] {
       { element: el("title"), popover: { title: "필지 블랙박스", description: "안양 건물 27,713동의 공개 데이터로 위반건축물 우선조사 후보를 찾고, 필지 이력과 결재 문서까지 한 흐름으로 처리하는 담당자용 도구입니다." } },
       { element: el("stats"), popover: { title: "확정 수치", description: "위반 표기 1,573동 · 대장 미연계 4,112동 · AI 후보 1,918동(A 913·B 1,005). 모든 화면의 숫자는 이 기준(2026-09-09)과 같습니다." } },
       { element: el("public-btn"), popover: { title: "공개 모드", description: "로그인 없이 3D 지도·성과·데이터 출처를 볼 수 있습니다. AI 후보는 낙인 방지를 위해 100m 격자 개수로만 표시됩니다." } },
-      { element: el("officer-card"), popover: { title: "담당자 모드", description: "PIN으로 들어오면 필지 단위 후보·점수, 현장 판정, 법정 서식 7종(HWPX·PDF) 생성이 열립니다." } },
-      { element: el("status"), popover: { title: "연동 상태", description: "브이월드 위성·PIN·OpenAI·Supabase 연결 여부를 보여줍니다. 키 값은 표시하지 않습니다." } },
+      { element: el("officer-card"), popover: { title: "담당자 모드", description: "버튼 하나로 들어옵니다(시연용, 비밀번호 없음). 필지 단위 후보·점수, 현장 판정, 법정 서식 7종(HWPX·PDF) 생성이 열립니다." } },
+      { element: el("status"), popover: { title: "연동 상태", description: "브이월드 위성·담당자 모드·OpenAI·Supabase 연결 여부를 보여줍니다. 키 값은 표시하지 않습니다." } },
       { popover: { title: "지도로 가 볼까요?", description: "다음을 누르면 3D 지도에서 시연 필지(박달동 139-137)까지 안내합니다.", nextBtnText: "지도 둘러보기 →", onNextClick: () => t.go("/map?tour=1") } },
     ];
   }
@@ -68,7 +68,7 @@ function stepsFor(path: string, t: TourCtx): DriveStep[] {
         { popover: { title: "담당자 업무 홈으로", description: "실제 업무 순서(조사 계획 → 현장조사 → 사전통지 → 시정명령 → 계고·부과 → 종결)를 이어서 안내합니다.", nextBtnText: "업무 홈 →", onNextClick: () => t.go("/work?tour=1") } }
       );
     } else {
-      steps.push({ popover: { title: "여기까지가 공개 모드", description: "담당자 모드에서는 필지 단위 후보·점수·판정·결재 문서가 열립니다. 첫 화면의 담당자 카드에서 PIN을 입력하세요.", nextBtnText: "담당자 모드로 →", onNextClick: () => t.go("/?officer=1") } });
+      steps.push({ popover: { title: "여기까지가 공개 모드", description: "담당자 모드에서는 필지 단위 후보·점수·판정·결재 문서가 열립니다. 첫 화면의 담당자 카드에서 버튼만 누르면 됩니다.", nextBtnText: "담당자 모드로 →", onNextClick: () => t.go("/?officer=1") } });
     }
     return steps;
   }

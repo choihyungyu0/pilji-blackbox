@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSessionToken, OFFICER_COOKIE, SESSION_MAX_AGE_S, sessionSecret, verifySessionToken } from "@/lib/session";
+import { createSessionToken, OFFICER_COOKIE, pinRequired, SESSION_MAX_AGE_S, sessionSecret, verifySessionToken } from "@/lib/session";
 import { sbConfigured, sbRest } from "@/lib/supabase-rest";
 import { writeLog } from "@/lib/db";
 
@@ -7,7 +7,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * SEC-01 담당자 모드 PIN 인증. 5회 오류 → 60초 잠금 (ST-S1).
+ * SEC-01 담당자 모드 진입.
+ *  - 기본(열린 모드, 시연·심사용): 비밀번호 없이 세션 발급 — 담당자 모드는 "필지 단위 후보·문서를 여는 구분"이지 접근 통제가 아니다.
+ *  - OFFICER_PIN_REQUIRED=1 + ADMIN_PIN: PIN 인증, 5회 오류 → 60초 잠금 (ST-S1).
  * 서버리스(Vercel)는 인스턴스마다 메모리가 달라 메모리 카운터만으로는 잠금이 새므로 세 겹으로 센다:
  *  ① 인스턴스 메모리(빠른 경로) ② 서명된 잠금 쿠키(같은 브라우저) ③ Supabase pb_logs 의 최근 60초 실패 횟수(IP 해시, 인스턴스 무관)
  * PIN 미설정이면 담당자 모드 비활성 + 사유.
@@ -58,16 +60,25 @@ async function recentFailsDb(hash: string): Promise<number | null> {
   }
 }
 
+function issueSession(token: string) {
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(OFFICER_COOKIE, token, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: SESSION_MAX_AGE_S });
+  res.cookies.set(LOCK_COOKIE, "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
+  return res;
+}
+
 export async function GET(req: NextRequest) {
-  const configured = Boolean(process.env.ADMIN_PIN && process.env.ADMIN_PIN.length >= 6);
   const officer = await verifySessionToken(req.cookies.get(OFFICER_COOKIE)?.value, sessionSecret());
-  return NextResponse.json({ ok: true, configured, officer, reason: configured ? null : "ADMIN_PIN 미설정(6자리 이상 필요)" });
+  return NextResponse.json({ ok: true, configured: true, open: !pinRequired(), officer, reason: null });
 }
 
 export async function POST(req: NextRequest) {
-  const pin = process.env.ADMIN_PIN;
-  if (!pin || pin.length < 6) return NextResponse.json({ ok: false, error: "담당자 모드가 설정되지 않았습니다 (ADMIN_PIN)" }, { status: 503 });
-  const secret = sessionSecret()!;
+  const secret = sessionSecret();
+  if (!pinRequired()) {
+    // 열린 모드 — 입력값은 보지 않는다 (아무거나 또는 비워도 진입)
+    return issueSession(await createSessionToken(secret));
+  }
+  const pin = process.env.ADMIN_PIN!;
   const key = clientKey(req);
   const now = Date.now();
   const mem = fails.get(key);
@@ -108,11 +119,7 @@ export async function POST(req: NextRequest) {
   }
 
   fails.delete(key);
-  const token = await createSessionToken(secret);
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set(OFFICER_COOKIE, token, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: SESSION_MAX_AGE_S });
-  res.cookies.set(LOCK_COOKIE, "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
-  return res;
+  return issueSession(await createSessionToken(secret));
 }
 
 export async function DELETE() {

@@ -2,10 +2,11 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { OFFICER_COOKIE, sessionSecret, verifySessionToken } from "@/lib/session";
 import { PinForm } from "@/components/app/pin-form";
+import { pinRequired } from "@/lib/session";
 import { DATA_ASOF, dongStats } from "@/lib/data-server";
 import { IntegrationStatus } from "@/components/app/integration-status";
 
-/** WF0 모드 선택 — 공개 모드는 입력 없이 진입, 담당자 모드는 PIN (SEC-01). */
+/** WF0 모드 선택 — 공개 모드는 입력 없이 진입, 담당자 모드는 기본 열림(시연·심사용). OFFICER_PIN_REQUIRED=1 이면 PIN (SEC-01). */
 export default async function Home({ searchParams }: { searchParams: Promise<{ next?: string; officer?: string }> }) {
   const sp = await searchParams;
   // ?next= 는 같은 사이트 경로만 허용 (열린 리다이렉트 방지)
@@ -13,7 +14,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
   const publicNext = next && /^\/(map|dashboard|about)(\?|$)/.test(next) ? next : undefined;
   const jar = await cookies();
   const officer = await verifySessionToken(jar.get(OFFICER_COOKIE)?.value, sessionSecret());
-  const pinConfigured = Boolean(process.env.ADMIN_PIN && process.env.ADMIN_PIN.length >= 6);
+  const locked = pinRequired();
   const t = dongStats.total;
 
   return (
@@ -50,7 +51,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
 
       <section data-tour="officer-card" className="card p-5 md:mt-10">
         <h2 className="text-base font-bold">담당자 모드</h2>
-        <p className="mt-1 text-xs text-muted-foreground">안양시 건축과·도시계획과 담당자용. 데모 비밀번호(6자리 이상)로 진입합니다.</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          안양시 건축과·도시계획과 담당자 화면입니다. {locked ? "비밀번호(6자리 이상)로 진입합니다." : "심사·시연용이라 비밀번호 없이 들어갑니다 — 실제 도입 시 시청 SSO·PIN으로 잠급니다."}
+        </p>
         {officer ? (
           <div className="mt-4 space-y-2 text-sm">
             <p className="rounded-md bg-brand/10 px-3 py-2 text-brand">담당자 모드로 로그인되어 있습니다.</p>
@@ -58,12 +61,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
               업무 홈으로 이동
             </Link>
           </div>
-        ) : pinConfigured ? (
-          <PinForm next={next || "/work"} autoFocus={sp.officer === "1"} />
         ) : (
-          <p className="mt-4 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-            담당자 모드 비활성 — 서버에 ADMIN_PIN(6자리 이상)이 설정되지 않았습니다.
-          </p>
+          <PinForm next={next || "/work"} autoFocus={sp.officer === "1"} locked={locked} />
         )}
         <div data-tour="status" className="mt-4 rounded-md border border-border p-2.5">
           <p className="label mb-1">연동 상태</p>
@@ -73,7 +72,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
           <li>· 위반 표기 1,573동(빨강) · AI 후보 1,918동(주황) 필지 단위 표시</li>
           <li>· 조사 계획 기안 → 현장조사 판정 → 사전통지 → 시정명령 → 계고·부과 → 종결</li>
           <li>· 법정 서식 7종 HWPX·PDF, 관리대장 CSV, 에이전트 대화</li>
-          <li>· 5회 오류 시 60초 잠금</li>
+          <li>· 사건 기록은 이 기기(브라우저)에만 보관, 판정만 서버 동기화</li>
         </ul>
       </section>
     </div>

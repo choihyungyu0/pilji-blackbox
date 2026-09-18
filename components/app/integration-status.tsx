@@ -15,7 +15,7 @@ export function IntegrationStatus({ compact }: { compact?: boolean }) {
   if (!s) return null;
   const rows: { label: string; ok: boolean | "warn"; note: string }[] = [
     { label: "브이월드 위성", ok: s.vworld.configured, note: s.vworld.note },
-    { label: "담당자 PIN", ok: s.pin.configured, note: s.pin.note },
+    { label: "담당자 모드", ok: s.pin.configured, note: s.pin.note },
     { label: `OpenAI ${s.openai.model}`, ok: s.openai.configured, note: s.openai.note },
     { label: "Supabase", ok: s.supabase.configured ? (s.supabase.tables ? true : "warn") : false, note: s.supabase.note },
   ];

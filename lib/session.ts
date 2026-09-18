@@ -28,7 +28,12 @@ export async function verifySessionToken(token: string | undefined, secret: stri
   return (await hmacHex(secret, expStr)) === token.slice(dot + 1);
 }
 
-/** 세션 서명 비밀 — SESSION_SECRET 없으면 ADMIN_PIN 파생(개발 편의). 둘 다 없으면 담당자 모드 비활성. */
-export function sessionSecret(): string | undefined {
-  return process.env.SESSION_SECRET || (process.env.ADMIN_PIN ? `pin:${process.env.ADMIN_PIN}` : undefined);
+/** 담당자 모드 잠금 여부 — 기본은 열림(시연·심사용). 실제 도입 시 OFFICER_PIN_REQUIRED=1 + ADMIN_PIN(6자리 이상)로 잠근다. */
+export function pinRequired(): boolean {
+  return process.env.OFFICER_PIN_REQUIRED === "1" && Boolean(process.env.ADMIN_PIN && process.env.ADMIN_PIN.length >= 6);
+}
+
+/** 세션 서명 비밀 — SESSION_SECRET > ADMIN_PIN 파생 > 내장 기본값(열린 모드 전용; 세션 위조가 아니라 모드 구분용이라 허용). */
+export function sessionSecret(): string {
+  return process.env.SESSION_SECRET || (process.env.ADMIN_PIN ? `pin:${process.env.ADMIN_PIN}` : "pilji-blackbox-open-demo");
 }

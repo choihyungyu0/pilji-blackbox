@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { pinRequired } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ export async function GET() {
     vworld: { configured: Boolean(process.env.NEXT_PUBLIC_VWORLD_KEY || process.env.VWORLD_KEY), note: process.env.NEXT_PUBLIC_VWORLD_KEY ? "위성 배경·하이브리드 사용" : "키 없음 — OpenStreetMap 폴백" },
     openai: { configured: Boolean(process.env.OPENAI_API_KEY), model: process.env.OPENAI_MODEL || "gpt-4o-mini", note: process.env.OPENAI_API_KEY ? "에이전트 대화 사용 가능" : "키 없음 — 대화 비활성(문서 생성은 동작)" },
     supabase: sb,
-    pin: { configured: Boolean(process.env.ADMIN_PIN && process.env.ADMIN_PIN.length >= 6), note: process.env.ADMIN_PIN ? "담당자 모드 사용 가능" : "ADMIN_PIN 없음 — 담당자 모드 잠김" },
+    pin: { configured: true, note: pinRequired() ? "PIN 잠금 (OFFICER_PIN_REQUIRED=1)" : "열림 — 비밀번호 없이 진입 (시연·심사용)" },
     env: process.env.VERCEL_ENV ?? (process.env.NODE_ENV === "production" ? "production" : "development"),
   });
 }
