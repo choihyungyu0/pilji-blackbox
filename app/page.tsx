@@ -3,6 +3,7 @@ import Link from "next/link";
 import { OFFICER_COOKIE, sessionSecret, verifySessionToken } from "@/lib/session";
 import { PinForm } from "@/components/app/pin-form";
 import { DATA_ASOF, dongStats } from "@/lib/data-server";
+import { IntegrationStatus } from "@/components/app/integration-status";
 
 /** WF0 모드 선택 — 공개 모드는 입력 없이 진입, 담당자 모드는 PIN (SEC-01). */
 export default async function Home({ searchParams }: { searchParams: Promise<{ next?: string; officer?: string }> }) {
@@ -61,7 +62,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
             담당자 모드 비활성 — 서버에 ADMIN_PIN(6자리 이상)이 설정되지 않았습니다.
           </p>
         )}
-        <ul className="mt-5 space-y-1 text-[11px] text-muted-foreground">
+        <div className="mt-4 rounded-md border border-border p-2.5">
+          <p className="label mb-1">연동 상태</p>
+          <IntegrationStatus compact />
+        </div>
+        <ul className="mt-4 space-y-1 text-[11px] text-muted-foreground">
           <li>· 위반 표기 1,573동(빨강) · AI 후보 1,918동(주황) 필지 단위 표시</li>
           <li>· 조사 계획 기안 → 현장조사 판정 → 사전통지 → 시정명령 → 계고·부과 → 종결</li>
           <li>· 법정 서식 7종 HWPX·PDF, 관리대장 CSV, 에이전트 대화</li>

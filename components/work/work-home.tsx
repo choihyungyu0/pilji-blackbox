@@ -8,6 +8,7 @@ import { useCases } from "@/store/cases";
 import { useApp } from "@/store/app-store";
 import { STAGES, STAGE_META, todosOf } from "@/lib/stages";
 import { cn } from "@/lib/utils";
+import { IntegrationStatus } from "@/components/app/integration-status";
 
 /**
  * 업무 홈 — 담당자가 출근해서 처음 보는 화면. 오늘 할 일(기한 지난 것 우선) · 단계 파이프라인 · 시작하기.
@@ -98,6 +99,10 @@ export function WorkHome() {
                 {log.slice(0, 8).map((l, i) => <li key={i} className="flex gap-2"><span className="tnum shrink-0 text-muted-foreground">{new Date(l.at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}</span><span className="truncate">{l.summary}</span></li>)}
               </ul>
             )}
+          </section>
+          <section className="card p-3 text-xs">
+            <p className="label mb-1">연동 상태</p>
+            <IntegrationStatus />
           </section>
           <section className="card p-3 text-xs">
             <p className="label mb-1">데이터 기준</p>
