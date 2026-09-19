@@ -2,7 +2,7 @@ import "server-only";
 import facilitiesJson from "@/data/derived/facilities.json";
 import floodJson from "@/data/derived/flood_supplies.json";
 import hjdJson from "@/data/derived/hjd.json";
-import { buildingsByPnu, haversine, laws, nearby, timelineSources, DATA_ASOF } from "./data-server";
+import { buildingsByPnu, haversine, laws, nearby, timelineSources, excavationSources, DATA_ASOF } from "./data-server";
 import type { Building, ParcelContext, ParcelFact } from "./types";
 
 /**
@@ -129,6 +129,21 @@ export function buildContext(pnu: string): ParcelContext | null {
   const cons = timelineSources.construction.map((c) => ({ c, d: haversine(c.lon, c.lat, b.lon, b.lat) })).filter((x) => x.d <= 200).sort((x, y) => (x.c.date < y.c.date ? 1 : -1));
   if (cons.length) {
     facts.push({ key: "construction", label: "건축착공신고(반경 200m)", value: `${cons.length}건 · 최근 ${cons[0].c.date} ${cons[0].c.use} (${fmtM(cons[0].d)})`, source: cons[0].c.source, asof: "2026-05-31" });
+  }
+
+  // 도로굴착 (안양시 API) — 반경 100m, 진행중·예정 우선
+  const exc = excavationSources.excavation.items.filter((e) => e.lon != null && e.lat != null).map((e) => ({ e, d: haversine(e.lon!, e.lat!, b.lon, b.lat) })).filter((x) => x.d <= 100).sort((x, y) => x.d - y.d);
+  const excActive = exc.filter((x) => x.e.status !== "완료");
+  facts.push({
+    key: "excavation", label: "도로굴착(반경 100m)",
+    value: exc.length ? `${exc.length}건(진행중·예정 ${excActive.length}) · 가장 가까운 ${exc[0].e.name} ${exc[0].e.status} ${exc[0].e.start ?? ""}~${exc[0].e.end ?? ""} (${fmtM(exc[0].d)})` : "없음",
+    source: excavationSources.excavation.source, asof: excavationSources.excavation.asof, note: excActive.length ? "현장 확인 겸행 가능 — 위험도 아님" : undefined,
+  });
+
+  // 지반침하 사고 (국토부 지하안전정보) — 반경 300m
+  const subs = excavationSources.subsidence.items.filter((s) => s.lon != null && s.lat != null).map((s) => ({ s, d: s.pnu === pnu ? 0 : haversine(s.lon!, s.lat!, b.lon, b.lat) })).filter((x) => x.d <= 300).sort((x, y) => x.d - y.d);
+  if (subs.length) {
+    facts.push({ key: "subsidence", label: "지반침하 사고(반경 300m)", value: `${subs.length}건 · 가장 가까운 ${subs[0].s.date} ${subs[0].s.dong} ${subs[0].s.jibun} ${subs[0].s.reason} (${subs[0].d === 0 ? "이 필지" : fmtM(subs[0].d)}) · 복구 ${subs[0].s.restore || "정보없음"}`, source: excavationSources.subsidence.source, asof: excavationSources.subsidence.asof });
   }
 
   // 이웃 위반·대장 미연계 (건물통합정보) — 반경 100m

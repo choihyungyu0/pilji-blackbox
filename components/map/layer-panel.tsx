@@ -9,8 +9,6 @@ import type { Mode } from "@/lib/types";
 type LayerDef = { key: LayerKey; label: string; color: string; officerOnly?: boolean; publicOnly?: boolean; count?: (c: Record<string, number>) => string; hint: string; disabled?: string };
 
 const P1_LAYERS = [
-  { label: "도로굴착", why: "안양시 도로굴착 API(15152770) 활용신청 후 적재 (P1)" },
-  { label: "지반침하", why: "국토부 지하안전정보 API(15041891) 활용신청 후 적재 (P1)" },
   { label: "CCTV 위치", why: "경기데이터드림 CCTV 현황 미적재 (P1)" },
   { label: "위성 변화 구역", why: "Sentinel-2 지수 사전계산 미완료 (P1)" },
 ];
@@ -32,7 +30,8 @@ export function LayerPanel({ mode }: { mode: Mode }) {
     { key: "ledger", label: "대장 미연계", color: COLORS.ledger, count: (c) => `${c.ledger_false.toLocaleString()}동`, hint: "용도·구조가 빈 건물 — 부속건물·가설물일 수 있음 (S1)" },
     { key: "gb", label: "개발제한구역", color: COLORS.gb, hint: "브이월드 LT_C_UD801 · 초록 반투명" },
     { key: "slopes", label: "급경사지 (공개 47곳)", color: COLORS.slope, hint: "행안부 급경사지 현황 → 연속지적도 필지 외곽선. 시 발표 59곳과 12곳 차이" },
-    { key: "facilities", label: "공공건축물·대피·급수시설", color: "#a855f7", hint: "안양시 공공데이터 3종 지오코딩 (줌 14 이상)" },
+    { key: "facilities", label: "공공건축물·대피·급수·공동주택", color: "#a855f7", hint: "안양시 공공데이터 4종 지오코딩 (줌 14 이상)" },
+    { key: "excavation", label: "도로굴착·지반침하", color: "#dc2626", hint: "안양시 도로굴착 공사현황(15152770, 진행중·예정 55건) + 국토부 지반침하사고(15041891, 안양 6건). 빌드 시 캐시 · 클릭하면 내용" },
     { key: "hjd", label: "행정동 경계", color: "#ffffff", hint: "행정동 31개" },
   ];
 

@@ -3,6 +3,7 @@ import propsJson from "@/data/derived/bldg_props.json";
 import timelineJson from "@/data/derived/timeline_sources.json";
 import dongStatsJson from "@/data/derived/dong_stats.json";
 import lawsJson from "@/data/laws/laws.json";
+import excavationJson from "@/data/derived/excavation.json";
 import type { Building, Grade, LawItem } from "./types";
 
 /**
@@ -131,3 +132,15 @@ export const dongStats = dongStatsJson as {
 };
 
 export const laws = (lawsJson as { items: LawItem[] }).items;
+
+// ── 도로굴착(안양시 15152770)·지반침하사고(국토부 15041891) — 빌드 시 캐시, 런타임 호출 없음 ──
+export type ExcavationItem = { id: string; name: string; company: string; address: string; start: string | null; end: string | null; status: "예정" | "진행중" | "완료"; lon: number | null; lat: number | null };
+export type SubsidenceItem = {
+  id: string; date: string; sigungu: string; dong: string; jibun: string; pnu: string | null; reason: string; detail: string; size: string;
+  death: number; injury: number; vehicle: number; restore: string; restoreMethod: string; restoreDate: string | null; lon: number | null; lat: number | null; matched: string;
+};
+export const excavationSources = excavationJson as unknown as {
+  fetched: string;
+  excavation: { source: string; asof: string; crs_note: string; total: number; geocoded: number; items: ExcavationItem[] };
+  subsidence: { source: string; asof: string; range: string; total_national: number; anyang: number; items: SubsidenceItem[] };
+};

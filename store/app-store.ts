@@ -5,7 +5,7 @@ import { persist } from "zustand/middleware";
 import type { Building, Mode, Verdict } from "@/lib/types";
 
 /** 지도 레이어 토글 (LYR-01~08). P1 레이어는 데이터가 없으면 UI 에서 비활성 */
-export type LayerKey = "viol" | "cand" | "ledger" | "gb" | "slopes" | "hjd" | "facilities" | "grid";
+export type LayerKey = "viol" | "cand" | "ledger" | "gb" | "slopes" | "hjd" | "facilities" | "grid" | "excavation";
 export type ColorMode = "score" | "viol" | "age" | "use";
 
 export type Filters = {
@@ -77,7 +77,7 @@ export const useApp = create<State>()(
       mode: "public",
       setMode: (m) => set({ mode: m }),
 
-      layers: { viol: true, cand: true, ledger: false, gb: false, slopes: true, hjd: true, facilities: false, grid: true },
+      layers: { viol: true, cand: true, ledger: false, gb: false, slopes: true, hjd: true, facilities: false, grid: true, excavation: true },
       toggleLayer: (k) => set((s) => ({ layers: { ...s.layers, [k]: !s.layers[k] } })),
       colorMode: "score",
       setColorMode: (c) => set({ colorMode: c }),
@@ -112,6 +112,8 @@ export const useApp = create<State>()(
     }),
     {
       name: "pilji-blackbox-v1",
+      version: 2,
+      migrate: (state) => ({ ...(state as object), layers: { viol: true, cand: true, ledger: false, gb: false, slopes: true, hjd: true, facilities: false, grid: true, excavation: true, ...((state as { layers?: object })?.layers ?? {}) } }),
       partialize: (s) => ({ org: s.org, list: s.list, listMeta: s.listMeta, log: s.log, layers: s.layers, colorMode: s.colorMode }),
     }
   )

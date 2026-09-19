@@ -132,6 +132,27 @@ export function MapView({ mode, onSatFallback }: Props) {
           },
         });
       }
+      if (!map.getSource("exc")) {
+        map.addSource("exc", { type: "geojson", data: "/data/excavation.geojson" });
+        map.addLayer({
+          id: "exc-pt", type: "circle", source: "exc", minzoom: 11,
+          paint: {
+            "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 3, 15, 7, 17, 9],
+            "circle-color": ["case", ["==", ["get", "kind"], "subsidence"], "#7c3aed", ["==", ["get", "status"], "완료"], "#9ca3af", "#dc2626"],
+            "circle-stroke-color": "#fff", "circle-stroke-width": 1.5, "circle-opacity": 0.9,
+          },
+        });
+        const excPopup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, offset: 12, maxWidth: "300px" });
+        map.on("click", "exc-pt", (e) => {
+          const p = (e.features?.[0]?.properties ?? {}) as Record<string, string>;
+          const html = p.kind === "subsidence"
+            ? `<b>[지반침하] ${p.reason || "원인 미기재"}</b><br/>${p.date} · ${p.dong} ${p.jibun}<br/>${p.detail || ""}<br/>${p.size}<br/>복구 ${p.restore || "정보없음"}<br/><span style="color:#6b7280;font-size:10px">국토교통부 지하안전정보(15041891)</span>`
+            : `<b>도로굴착 (${p.status})</b><br/>${p.name}<br/>${p.start} ~ ${p.end}<br/>${p.address}<br/><span style="color:#6b7280;font-size:10px">안양시 도로굴착 공사현황(15152770) · EPSG:5186→4326</span>`;
+          excPopup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+        });
+        map.on("mouseenter", "exc-pt", () => { map.getCanvas().style.cursor = "pointer"; });
+        map.on("mouseleave", "exc-pt", () => { map.getCanvas().style.cursor = ""; });
+      }
       if (mode === "public" && !map.getSource("grid")) {
         map.addSource("grid", { type: "geojson", data: "/data/public/cand_grid100.geojson" });
         map.addLayer({
@@ -179,8 +200,9 @@ export function MapView({ mode, onSatFallback }: Props) {
           "fill-extrusion-vertical-gradient": true,
         },
       });
-      // 시설 점은 건물 위로
+      // 시설·굴착 점은 건물 위로
       if (map.getLayer("fac-pt")) map.moveLayer("fac-pt");
+      if (map.getLayer("exc-pt")) map.moveLayer("exc-pt");
 
       const onMove = (e: MapMouseEvent) => {
         const f = map.queryRenderedFeatures(e.point, { layers: [BLDG_LAYER] })[0];
@@ -221,6 +243,7 @@ export function MapView({ mode, onSatFallback }: Props) {
     vis("slopes-line", layers.slopes);
     vis("hjd-line", layers.hjd);
     vis("fac-pt", layers.facilities);
+    vis("exc-pt", layers.excavation);
     vis("grid-fill", mode === "public" && layers.grid);
     vis("grid-line", mode === "public" && layers.grid);
     dongMarkersRef.current.forEach((m) => (m.getElement().style.display = layers.hjd ? "" : "none"));

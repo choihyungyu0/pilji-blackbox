@@ -1,5 +1,5 @@
 import "server-only";
-import { buildingsByPnu, haversine, timelineSources, DATA_ASOF } from "./data-server";
+import { buildingsByPnu, haversine, timelineSources, excavationSources, DATA_ASOF } from "./data-server";
 import type { Building, TimelineEvent } from "./types";
 
 const BLDG_SRC = "국토교통부 GIS건물통합정보(브이월드, CC BY)";
@@ -7,7 +7,7 @@ const BLDG_SRC = "국토교통부 GIS건물통합정보(브이월드, CC BY)";
 /**
  * TML-01 필지 타임라인 조립.
  * 규칙: BR-T1 출처·기준일 없는 이벤트 제외 / BR-T2 사고·굴착 좌표는 필지 경계 50m(대략 위치는 100m) 이내만.
- * 굴착·지반침하·위성 변화는 P1 — 데이터 미적재 시 항목을 만들지 않는다.
+ * 도로굴착(안양시 API)·지반침하사고(국토부 API)는 빌드 캐시에서 50m 규칙으로 붙인다. 위성 변화는 P1 미적재 — 항목을 만들지 않는다.
  */
 export function buildTimeline(pnu: string): { events: TimelineEvent[]; building: Building | null; notes: string[] } {
   const bs = buildingsByPnu(pnu);
@@ -87,6 +87,30 @@ export function buildTimeline(pnu: string): { events: TimelineEvent[]; building:
       title: `건축착공신고 (${ev.use})`, detail: `${ev.address} · 매칭 거리 ${ev.nearest_m}m`,
       source: ev.source, asOf: "2026-05-31", distanceM: Math.round(d), lon: ev.lon, lat: ev.lat, reliability: "공식",
       approx: ev.nearest_m > 30,
+    });
+  }
+
+  // 도로굴착 공사 — 필지 경계 50m (BR-T2), 진행 상태·기간·거리 표시
+  for (const ex of excavationSources.excavation.items) {
+    if (ex.lon == null || ex.lat == null) continue;
+    const d = haversine(ex.lon, ex.lat, b.lon, b.lat);
+    if (d > 50) continue;
+    events.push({
+      id: `exc-${ex.id}`, date: ex.start ?? excavationSources.excavation.asof, sortDate: ex.start ?? excavationSources.excavation.asof, kind: "construction",
+      title: `도로굴착 공사 (${ex.status})`, detail: `${ex.name} · ${ex.start ?? "?"} ~ ${ex.end ?? "?"} · ${ex.address}`,
+      source: excavationSources.excavation.source, asOf: excavationSources.excavation.asof, distanceM: Math.round(d), lon: ex.lon, lat: ex.lat, reliability: "공식",
+    });
+  }
+
+  // 지반침하 사고 — 필지 일치 또는 50m
+  for (const sb of excavationSources.subsidence.items) {
+    if (sb.lon == null || sb.lat == null) continue;
+    const d = sb.pnu === pnu ? 0 : haversine(sb.lon, sb.lat, b.lon, b.lat);
+    if (d > 50) continue;
+    events.push({
+      id: `sub-${sb.id}`, date: sb.date, sortDate: sb.date, kind: "disaster",
+      title: `[지반침하] ${sb.reason || "원인 미기재"}`, detail: `${sb.dong} ${sb.jibun} · ${sb.detail || ""} · ${sb.size} · 복구 ${sb.restore || "정보없음"}${sb.injury || sb.death ? ` · 인명 ${sb.death + sb.injury}` : ""}`,
+      source: excavationSources.subsidence.source, asOf: excavationSources.subsidence.asof, distanceM: Math.round(d), lon: sb.lon, lat: sb.lat, reliability: "공식", approx: sb.matched === "geocoder",
     });
   }
 

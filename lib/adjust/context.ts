@@ -44,7 +44,7 @@ export const useAdjust = create<State>((set, get) => ({
     set({ status: "loading" });
     inflight = (async () => {
       try {
-        const r = await fetch("/data/ctx_adjust.json", { cache: "force-cache" });
+        const r = await fetch("/data/ctx_adjust.json", { cache: "no-cache" }); // 배포마다 바뀌는 파일 — ETag 재검증
         if (!r.ok) throw new Error(String(r.status));
         set({ ctx: (await r.json()) as CtxFile, status: "ready" });
       } catch {

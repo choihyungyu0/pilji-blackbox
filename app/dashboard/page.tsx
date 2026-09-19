@@ -5,6 +5,7 @@ import metrics from "@/data/model_metrics.json";
 import { GainsChart } from "@/components/dashboard/gains-chart";
 import { DongTable } from "@/components/dashboard/dong-table";
 import { AdjustCard } from "@/components/dashboard/adjust-card";
+import { SlopeCheckCard } from "@/components/dashboard/slope-check-card";
 
 export const metadata: Metadata = { title: "성과" };
 
@@ -35,6 +36,8 @@ export default function DashboardPage() {
       </section>
 
       <AdjustCard />
+
+      <SlopeCheckCard />
 
       <section className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
         <div className="card p-4">

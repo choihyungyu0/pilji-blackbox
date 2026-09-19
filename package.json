@@ -12,7 +12,9 @@
     "data": "python scripts/build_data.py",
     "data:vworld": "python scripts/fetch_vworld_layers.py",
     "templates": "python scripts/make_hwpx_templates.py",
-    "data:adjust": "node scripts/build_ctx_adjust.ts"
+    "data:adjust": "node scripts/build_ctx_adjust.ts",
+    "data:excavation": "python scripts/fetch_excavation.py",
+    "data:check": "python scripts/check_slopes.py"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.0",
