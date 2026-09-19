@@ -4,12 +4,12 @@
  *
  *   adj_score = score × (1 + w_ctx) × (1 + w_verdict)
  *
- * w_ctx: 안양시 공공데이터 7종으로 만든 사후 보정 계수(C1~C7, 합산 후 [-1.0, +0.60] 절단). 모델 재학습 없음.
+ * w_ctx: 안양시 공공데이터 8종으로 만든 사후 보정 계수(C1~C8, 합산 후 [-1.0, +0.60] 절단). 모델 재학습 없음.
  * w_verdict: 반경 200m 담당자 판정의 라플라스 평활 차이(±0.25). 판정은 조사 순서만 바꾸고 위반 여부를 바꾸지 않는다.
  * 기존 `score` 는 절대 바꾸지 않는다 — 보정은 그 위에 얹는 값이며 NEXT_PUBLIC_ADJ_ENABLED=false 면 전부 꺼진다.
  */
 
-export type CtxCode = "C1" | "C2" | "C3" | "C3b" | "C4" | "C5" | "C6" | "C7";
+export type CtxCode = "C1" | "C2" | "C3" | "C3b" | "C4" | "C5" | "C6" | "C7" | "C8";
 
 export const CTX_RULES: Record<CtxCode, { label: string; weight: number; dataset: string; source: string; cond: string }> = {
   C1: { label: "공공건축물 필지 — 후보 제외", weight: -1.0, dataset: "안양시_공공건축물현황", source: "공공데이터포털 15114534 (2026-06-30)", cond: "공공건축물 지번과 일치" },
@@ -20,6 +20,7 @@ export const CTX_RULES: Record<CtxCode, { label: string; weight: number; dataset
   C5: { label: "반경 300m 비상대피시설 없음", weight: 0.05, dataset: "안양시_비상대피시설 현황", source: "공공데이터포털 3045138 (2025-12-26)", cond: "반경 300m 안 0곳" },
   C6: { label: "반경 300m 민방위 급수시설 없음", weight: 0.03, dataset: "안양시_민방위 급수시설 현황", source: "공공데이터포털 3045178 (2026-03-07)", cond: "반경 300m 안 0곳" },
   C7: { label: "반경 100m 진행 중·예정 도로굴착", weight: 0.1, dataset: "안양시_도로굴착 공사현황", source: "공공데이터포털 15152770 (조회 2026-09-19)", cond: "반경 100m 안 진행 중·예정 굴착 공사 — 현장 확인을 겸할 수 있음(위험도 아님)" },
+  C8: { label: "정비사업 구역 반경 200m (조합설립인가 이후·준공 전)", weight: -0.3, dataset: "안양시_일반 정비사업 추진현황", source: "공공데이터포털 15150142 (2025-04-30)", cond: "조합설립인가 이후·준공 전 구역(사업단계 조합설립·관리처분·착공) 지번 반경 200m — 곧 철거되므로 우선순위를 내림" },
 };
 
 export const W_CTX_MIN = -1.0;
@@ -36,6 +37,8 @@ export type CtxInput = {
   waterWithin300m: number;
   /** 반경 100m 진행 중·예정 도로굴착 건수 (C7) */
   activeExcavationWithin100m?: number;
+  /** 반경 200m 정비사업 구역(조합설립인가 이후·준공 전) 수 (C8) */
+  redevelopZonesWithin200m?: number;
 };
 
 export type CtxReason = { code: CtxCode; label: string; weight: number; dataset: string; source: string; cond: string; detail?: string };
@@ -56,6 +59,7 @@ export function computeCtx(i: CtxInput): CtxAdjust {
   if (i.sheltersWithin300m === 0) push("C5");
   if (i.waterWithin300m === 0) push("C6");
   if ((i.activeExcavationWithin100m ?? 0) > 0) push("C7", `${i.activeExcavationWithin100m}건`);
+  if ((i.redevelopZonesWithin200m ?? 0) > 0) push("C8", `${i.redevelopZonesWithin200m}구역`);
   const raw = reasons.reduce((a, r) => a + r.weight, 0);
   const w = Math.max(W_CTX_MIN, Math.min(W_CTX_MAX, Math.round(raw * 1000) / 1000));
   return { w, excluded: false, reasons };

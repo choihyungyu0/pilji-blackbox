@@ -140,6 +140,8 @@ export type FineEstimate = {
   reduction: number;
   amount: number | null;
   formula: string;
+  /** ㎡당 시가표준액을 안양시 공공데이터에서 자동 입력한 경우 그 출처 (참고 산정 표기용) */
+  stdSource?: { dataset: string; year: number; perM2: number } | null;
 };
 
 export type CaseSurvey = {

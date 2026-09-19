@@ -72,7 +72,7 @@ export default function AboutPage() {
       {/* TBL-02 출처 */}
       <section>
         <h2 className="mb-2 text-base font-bold">데이터 출처·기준일·라이선스 (TBL-02)</h2>
-        <p className="mb-2 text-xs text-muted-foreground">사업계획서 3장 "제공기관 | 데이터명 | URL" 표와 동일. 안양시 공공데이터 6종 포함. 모든 레이어·카드는 이 기준일을 표시한다.</p>
+        <p className="mb-2 text-xs text-muted-foreground">사업계획서 3장 "제공기관 | 데이터명 | URL" 표와 동일. 안양시 공공데이터 9종(파일 8 + 오픈API 1) 포함. 모든 레이어·카드는 이 기준일을 표시한다.</p>
         {groups.map((g) => (
           <div key={g} className="card mb-3 overflow-x-auto">
             <table className="w-full min-w-[820px] text-xs">

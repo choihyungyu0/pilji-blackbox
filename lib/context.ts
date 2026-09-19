@@ -2,8 +2,9 @@ import "server-only";
 import facilitiesJson from "@/data/derived/facilities.json";
 import floodJson from "@/data/derived/flood_supplies.json";
 import hjdJson from "@/data/derived/hjd.json";
-import { buildingsByPnu, haversine, laws, nearby, timelineSources, excavationSources, DATA_ASOF } from "./data-server";
+import { buildingsByPnu, haversine, laws, nearby, timelineSources, excavationSources, redevelopSources, DATA_ASOF } from "./data-server";
 import type { Building, ParcelContext, ParcelFact } from "./types";
+import { STD_SOURCE, stdValueOf } from "./std-value";
 
 /**
  * 필지 여건 (PCL-04) — 한 필지에 대해 안양시 공공데이터·행안부·브이월드·법령을 한 번에 대조한다.
@@ -131,6 +132,14 @@ export function buildContext(pnu: string): ParcelContext | null {
     facts.push({ key: "construction", label: "건축착공신고(반경 200m)", value: `${cons.length}건 · 최근 ${cons[0].c.date} ${cons[0].c.use} (${fmtM(cons[0].d)})`, source: cons[0].c.source, asof: "2026-05-31" });
   }
 
+  // 시가표준액 (안양시_일반건축물_시가표준액) — 이행강제금 참고 산정용
+  const sv = stdValueOf(pnu);
+  facts.push({
+    key: "std", label: "㎡당 시가표준액",
+    value: sv ? `${sv.v.toLocaleString("ko-KR")}원 (과세년도 ${sv.y} · 필지 합계 ${sv.t.toLocaleString("ko-KR")}원 / 연면적 ${sv.a.toLocaleString("ko-KR")}㎡${sv.n > 1 ? ` · ${sv.n}호 합산` : ""})` : "정보없음 (이 필지의 시가표준액 행 없음)",
+    source: STD_SOURCE, asof: "2024-12-31 판", note: sv ? "이행강제금 참고 산정용 — 부과 시점 시가표준액으로 담당자 재확인" : undefined,
+  });
+
   // 도로굴착 (안양시 API) — 반경 100m, 진행중·예정 우선
   const exc = excavationSources.excavation.items.filter((e) => e.lon != null && e.lat != null).map((e) => ({ e, d: haversine(e.lon!, e.lat!, b.lon, b.lat) })).filter((x) => x.d <= 100).sort((x, y) => x.d - y.d);
   const excActive = exc.filter((x) => x.e.status !== "완료");
@@ -144,6 +153,13 @@ export function buildContext(pnu: string): ParcelContext | null {
   const subs = excavationSources.subsidence.items.filter((s) => s.lon != null && s.lat != null).map((s) => ({ s, d: s.pnu === pnu ? 0 : haversine(s.lon!, s.lat!, b.lon, b.lat) })).filter((x) => x.d <= 300).sort((x, y) => x.d - y.d);
   if (subs.length) {
     facts.push({ key: "subsidence", label: "지반침하 사고(반경 300m)", value: `${subs.length}건 · 가장 가까운 ${subs[0].s.date} ${subs[0].s.dong} ${subs[0].s.jibun} ${subs[0].s.reason} (${subs[0].d === 0 ? "이 필지" : fmtM(subs[0].d)}) · 복구 ${subs[0].s.restore || "정보없음"}`, source: excavationSources.subsidence.source, asof: excavationSources.subsidence.asof });
+  }
+
+  // 정비사업 구역 (안양시) — 반경 200m
+  const rd = redevelopSources.items.filter((r) => r.lon != null && r.lat != null).map((r) => ({ r, d: haversine(r.lon!, r.lat!, b.lon, b.lat) })).filter((x) => x.d <= 200).sort((x, y) => x.d - y.d);
+  if (rd.length) {
+    const top = rd[0];
+    facts.push({ key: "redevelop", label: "정비사업 구역(반경 200m)", value: `${rd.length}구역 · 가장 가까운 ${top.r.name} (${top.r.type} · ${top.r.stage} · ${top.r.status}${top.r.union_at ? ` · 조합설립인가 ${top.r.union_at}` : ""}) ${fmtM(top.d)}${top.r.c8 ? " — 조합설립 이후·준공 전, 조사 우선순위 −30%(C8)" : ""}`, source: redevelopSources.source, asof: redevelopSources.asof });
   }
 
   // 이웃 위반·대장 미연계 (건물통합정보) — 반경 100m

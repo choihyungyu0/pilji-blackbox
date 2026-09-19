@@ -2,7 +2,7 @@ import "server-only";
 import { buildingById, DATA_ASOF } from "./data-server";
 import { lawById, toCitation } from "./laws";
 import { fmtWon, ledgerCategory } from "./stages";
-import type { Building, Case, Citation, DocPayload, DocTemplate } from "./types";
+import type { Building, Case, Citation, DocPayload, DocTemplate, FineEstimate } from "./types";
 
 /**
  * 결재 문서 7종 — 토큰 조립 + 필수 기재사항 점검(DOC-04, BR-C2).
@@ -256,6 +256,14 @@ export function buildCorrectionOrder(input: { c: CaseInput; content?: string; de
 }
 
 // ───────────────────────────────────────────── DOC-05 이행강제금 계고서
+/** 이행강제금 참고 산정 안내 — 시가표준액이 안양시 공공데이터에서 왔으면 과세년도를 밝힌다 (확정 금액 아님) */
+function fineNote(est: FineEstimate): string {
+  const src = est.stdSource
+    ? `㎡당 시가표준액 ${fmtWon(est.stdSource.perM2)}원은 ${est.stdSource.dataset}(공공데이터포털 15080551, 과세년도 ${est.stdSource.year}) 값이다. `
+    : "";
+  return `${src}참고 산정값이다. 이행강제금은 부과 시점의 시가표준액으로 산정하며, 이 데이터의 과세년도는 ${est.stdSource?.year ?? 2023}년이 최신이다. 확정 금액은 담당자가 다시 확인해야 한다.`;
+}
+
 export function buildFineWarning(input: { c: CaseInput; deadlineDays?: number; deadline?: string; noncomplianceNote?: string; org?: OrgInput }): DocPayload | { error: string } {
   const b = buildingById(input.c.id);
   if (!b) return { error: "건물을 찾을 수 없습니다" };
@@ -277,7 +285,8 @@ export function buildFineWarning(input: { c: CaseInput; deadlineDays?: number; d
     PNU: b.pnu,
     FACT: sv?.findings?.trim() || "정보없음",
     WARN_DEADLINE: deadline,
-    FINE_AMOUNT: est.amount == null ? "산정값 입력 필요" : `금 ${fmtWon(est.amount)}원`,
+    FINE_AMOUNT: est.amount == null ? "산정값 입력 필요" : `금 ${fmtWon(est.amount)}원 (참고 산정)`,
+    FINE_NOTE: fineNote(est),
     FINE_BASIS: est.basis === "80-1-1"
       ? `건축법 제80조제1항제1호(1㎡ 시가표준액의 50% × 위반면적 × 시행령 제115조의3 비율 ${est.ratio}%)${est.halved ? " · 조례 37조① 1/2" : ""}${est.aggravated ? " · 80조② 가중 30%" : ""}`
       : `건축법 제80조제1항제2호(시가표준액 × 시행령 별표15 비율 ${est.ratio}%)${est.halved ? " · 조례 37조① 1/2" : ""}${est.aggravated ? " · 80조② 가중 30%" : ""}`,
@@ -314,7 +323,8 @@ export function buildFineImposition(input: { c: CaseInput; payDays?: number; pay
     SITE_ADDR: addrOf(b),
     PNU: b.pnu,
     FACT: sv?.findings?.trim() || "정보없음",
-    FINE_AMOUNT: `금 ${fmtWon(est.amount)}원`,
+    FINE_AMOUNT: `금 ${fmtWon(est.amount)}원 (참고 산정)`,
+    FINE_NOTE: fineNote(est),
     FINE_BASIS: est.basis === "80-1-1" ? `건축법 제80조제1항제1호 · 시행령 제115조의3 비율 ${est.ratio}%` : `건축법 제80조제1항제2호 · 시행령 별표15 비율 ${est.ratio}%`,
     FINE_FORMULA: est.formula,
     PAY_DUE: payDue,

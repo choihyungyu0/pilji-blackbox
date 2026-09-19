@@ -14,7 +14,9 @@
     "templates": "python scripts/make_hwpx_templates.py",
     "data:adjust": "node scripts/build_ctx_adjust.ts",
     "data:excavation": "python scripts/fetch_excavation.py",
-    "data:check": "python scripts/check_slopes.py"
+    "data:check": "python scripts/check_slopes.py",
+    "data:std": "python scripts/fetch_std_value.py",
+    "data:redevelop": "python scripts/fetch_redevelop.py"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.0",

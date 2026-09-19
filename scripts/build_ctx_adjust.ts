@@ -19,6 +19,7 @@ const fac = read("data/derived/facilities.json") as { items: { kind: string; lon
 const tl = read("data/derived/timeline_sources.json") as { construction: { lon: number; lat: number; nearest_building_id: number }[] };
 const flood = read("data/derived/flood_supplies.json") as { rows: { hjd: string; items: Record<string, number | string> }[] };
 const excav = read("data/derived/excavation.json") as { excavation: { items: { lon: number | null; lat: number | null; status: string }[] } };
+const redev = read("data/derived/redevelop.json") as { items: { lon: number | null; lat: number | null; c8: boolean; name: string }[] };
 const hjd = read("data/derived/hjd.json") as { features: { properties: { adm_nm: string }; geometry: { type: string; coordinates: number[][][] | number[][][][] } }[] };
 
 function haversine(lon1: number, lat1: number, lon2: number, lat2: number) {
@@ -51,6 +52,7 @@ const shelters = fac.items.filter((f) => f.kind === "shelter" && f.lon != null).
 const water = fac.items.filter((f) => f.kind === "water" && f.lon != null).map((f) => ({ lon: f.lon!, lat: f.lat! }));
 const cons = tl.construction.map((c) => ({ lon: c.lon, lat: c.lat, id: c.nearest_building_id }));
 const excActive = excav.excavation.items.filter((e) => e.lon != null && e.lat != null && e.status !== "완료").map((e) => ({ lon: e.lon!, lat: e.lat! }));
+const redevActive = redev.items.filter((r) => r.c8 && r.lon != null && r.lat != null).map((r) => ({ lon: r.lon!, lat: r.lat!, name: r.name }));
 const within = <T extends { lon: number; lat: number }>(pts: T[], lon: number, lat: number, r: number) => pts.filter((p) => haversine(p.lon, p.lat, lon, lat) <= r);
 
 // C4: 수방자재 — 수중펌프+엔진펌프 절대량, 행정동(구청 행 제외) 하위 25%. 인구 데이터가 없어 절대량 기준 (규칙 표에 명시).
@@ -65,7 +67,7 @@ const cands: Cand[] = props.rows
   .map((r) => ({ id: r[col.id] as number, pnu: r[col.pnu] as string, dong: r[col.dong] as string, jibun: r[col.jibun] as string, score: r[col.score] as number, grade: r[col.grade] as string, lon: r[col.lon] as number, lat: r[col.lat] as number, public_parcel: r[col.public_parcel] === true }));
 if (cands.length !== 1918) throw new Error(`후보 수 불일치: ${cands.length} (기대 1,918)`);
 
-const counts: Record<CtxCode, number> = { C1: 0, C2: 0, C3: 0, C3b: 0, C4: 0, C5: 0, C6: 0, C7: 0 };
+const counts: Record<CtxCode, number> = { C1: 0, C2: 0, C3: 0, C3b: 0, C4: 0, C5: 0, C6: 0, C7: 0, C8: 0 };
 const items: Record<string, { w: number; x?: true; r: CtxCode[]; d?: Record<string, string>; rb: number; ra: number }> = {};
 const scored = cands.map((c) => {
   const h = hjdOf(c.lon, c.lat);
@@ -79,6 +81,7 @@ const scored = cands.map((c) => {
     sheltersWithin300m: within(shelters, c.lon, c.lat, 300).length,
     waterWithin300m: within(water, c.lon, c.lat, 300).length,
     activeExcavationWithin100m: within(excActive, c.lon, c.lat, 100).length,
+    redevelopZonesWithin200m: within(redevActive, c.lon, c.lat, 200).length,
   });
   for (const r of adj.reasons) counts[r.code]++;
   const detail: Record<string, string> = {};

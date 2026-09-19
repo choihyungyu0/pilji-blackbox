@@ -4,6 +4,7 @@ import timelineJson from "@/data/derived/timeline_sources.json";
 import dongStatsJson from "@/data/derived/dong_stats.json";
 import lawsJson from "@/data/laws/laws.json";
 import excavationJson from "@/data/derived/excavation.json";
+import redevelopJson from "@/data/derived/redevelop.json";
 import type { Building, Grade, LawItem } from "./types";
 
 /**
@@ -139,6 +140,8 @@ export type SubsidenceItem = {
   id: string; date: string; sigungu: string; dong: string; jibun: string; pnu: string | null; reason: string; detail: string; size: string;
   death: number; injury: number; vehicle: number; restore: string; restoreMethod: string; restoreDate: string | null; lon: number | null; lat: number | null; matched: string;
 };
+export type RedevelopItem = { id: string; name: string; type: string; stage: string; status: string; location: string; area_m2: string | null; union_at: string | null; start_at: string | null; done_at: string | null; units_before: string | null; lon: number | null; lat: number | null; c8: boolean };
+export const redevelopSources = redevelopJson as unknown as { source: string; asof: string; rule: string; total: number; located: number; c8_zones: number; items: RedevelopItem[] };
 export const excavationSources = excavationJson as unknown as {
   fetched: string;
   excavation: { source: string; asof: string; crs_note: string; total: number; geocoded: number; items: ExcavationItem[] };

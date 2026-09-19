@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, Lock } from "lucide-react";
 import { emptyEstimate, useCases } from "@/store/cases";
 import { addDays, canAdvance, daysUntil, estimateFine, fmtWon, todayISO } from "@/lib/stages";
@@ -133,6 +133,18 @@ const RATIOS_2 = [
 export function FineCalc({ b, value, onChange }: { b: Building; c: Case; value: FineEstimate; onChange: (e: FineEstimate) => void }) {
   const set = (patch: Partial<FineEstimate>) => onChange(estimateFine({ ...value, ...patch }));
   const residential = /주택/.test(b.use ?? "");
+  // 안양시_일반건축물_시가표준액에서 ㎡당 값을 한 번 조회해 비어 있으면 자동 입력(수정 가능). 위반면적은 절대 자동으로 넣지 않는다.
+  const [std, setStd] = useState<{ v: number; y: number } | null | undefined>(undefined);
+  useEffect(() => {
+    let alive = true;
+    fetch(`/api/std?pnu=${b.pnu}`).then((r) => r.json()).then((j) => { if (alive) setStd(j.found ? { v: j.value.v, y: j.value.y } : null); }).catch(() => alive && setStd(null));
+    return () => { alive = false; };
+  }, [b.pnu]);
+  useEffect(() => {
+    if (std && value.stdPricePerM2 == null && value.basis === "80-1-1") {
+      onChange(estimateFine({ ...value, stdPricePerM2: std.v, stdSource: { dataset: "안양시_일반건축물_시가표준액", year: std.y, perM2: std.v } }));
+    }
+  }, [std]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="space-y-1.5 rounded-md border border-border p-2 text-[11px]">
       <p className="font-semibold">이행강제금 산정 (건축법 80조① · 시행령 115조의3·별표15 · 안양시 건축 조례 37조) — 값은 담당자 입력</p>
@@ -146,7 +158,9 @@ export function FineCalc({ b, value, onChange }: { b: Building; c: Case; value: 
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         {value.basis === "80-1-1" ? (
           <>
-            <label className="block"><span className="text-muted-foreground">1㎡ 시가표준액(원) *</span><input type="number" className="input mt-0.5 h-8 w-full text-xs" value={value.stdPricePerM2 ?? ""} onChange={(e) => set({ stdPricePerM2: e.target.value === "" ? null : Number(e.target.value) })} placeholder="지방세법 시가표준액" /></label>
+            <label className="block"><span className="text-muted-foreground">1㎡ 시가표준액(원) *</span><input type="number" className="input mt-0.5 h-8 w-full text-xs" value={value.stdPricePerM2 ?? ""} onChange={(e) => set({ stdPricePerM2: e.target.value === "" ? null : Number(e.target.value), stdSource: std && Number(e.target.value) === std.v ? value.stdSource : null })} placeholder={std === null ? "정보없음 — 직접 입력" : "지방세법 시가표준액"} />
+              <span className="text-[10px] text-muted-foreground">{std === undefined ? "시가표준액 조회 중…" : std ? `안양시_일반건축물_시가표준액 ${std.v.toLocaleString("ko-KR")}원/㎡ (과세년도 ${std.y})${value.stdSource ? " 자동 입력됨" : ""}` : "이 필지 시가표준액 정보없음"}</span>
+            </label>
             <label className="block"><span className="text-muted-foreground">위반면적(㎡) *</span><input type="number" step="0.1" className="input mt-0.5 h-8 w-full text-xs" value={value.area ?? ""} onChange={(e) => set({ area: e.target.value === "" ? null : Number(e.target.value) })} /></label>
             <label className="block sm:col-span-2"><span className="text-muted-foreground">비율(시행령 115조의3①)</span>
               <select className="input mt-0.5 h-8 w-full text-xs" value={value.ratio} onChange={(e) => set({ ratio: Number(e.target.value) })}>{RATIOS_1.map((r) => <option key={r.v} value={r.v}>{r.label}</option>)}</select>
@@ -166,8 +180,9 @@ export function FineCalc({ b, value, onChange }: { b: Building; c: Case; value: 
         <label className="flex items-center gap-1"><input type="checkbox" checked={value.aggravated} onChange={(e) => set({ aggravated: e.target.checked })} /> 영리·상습 가중 30%(80조②, 조례 37조②, 시행령 115조의3②)</label>
         <label className="flex items-center gap-1">80조의2 감경 <select className="input h-7 text-[11px]" value={value.reduction} onChange={(e) => set({ reduction: Number(e.target.value) })}><option value={0}>없음</option><option value={0.2}>20% (농업용 500㎡ 이하)</option><option value={0.5}>50%</option><option value={0.75}>75% (상한)</option></select></label>
       </div>
-      <p className="tnum rounded bg-muted px-2 py-1">산식: {value.formula || "—"} → <b>{value.amount == null ? "입력 필요" : `${fmtWon(value.amount)}원`}</b></p>
-      <p className="text-[10px] text-muted-foreground">감경은 최초 시정명령일부터 1년 이내 시정한 경우만(조례 37조④). 부과 연 1회(조례 37조③), 시정 시까지 반복(80조⑤). 실제 부과액은 시가표준액 조회 후 확정.</p>
+      <p className="tnum rounded bg-muted px-2 py-1">산식: {value.formula || "—"} → <b>{value.amount == null ? "입력 필요" : `${fmtWon(value.amount)}원 (참고 산정)`}</b></p>
+      <p className="rounded bg-amber-50 px-2 py-1 text-[10px] text-amber-900">참고 산정값이다. 이행강제금은 부과 시점의 시가표준액으로 산정하며, 이 데이터의 과세년도는 {std?.y ?? 2023}년이 최신이다. 확정 금액은 담당자가 다시 확인해야 한다. 위반면적은 담당자가 직접 입력한다.</p>
+      <p className="text-[10px] text-muted-foreground">감경은 최초 시정명령일부터 1년 이내 시정한 경우만(조례 37조④). 부과 연 1회(조례 37조③), 시정 시까지 반복(80조⑤).</p>
     </div>
   );
 }
