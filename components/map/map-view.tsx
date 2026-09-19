@@ -12,7 +12,7 @@ import { HEIGHT_EXPR, VWORLD_KEY, baseStyle, colorExpr, filterExpr, COLORS } fro
 
 /**
  * MAP-01 위성 배경 + 3D 건물 (MapLibre fill-extrusion, 높이 = 층수×3m / 높이 / 3m).
- * 스택 메모: CLAUDE.md 는 deck.gl GeoJsonLayer 를 적었으나 27,713동은 MapLibre 내장 돌출 레이어가
+ * 스택 메모: 설계서는 deck.gl GeoJsonLayer 를 적었으나 27,713동은 MapLibre 내장 돌출 레이어가
  * 의존성 없이 더 가볍고(feature-state 로 판정·선택 색 즉시 반영) 타일 분할이 자동이라 이쪽을 택했다 — README 기록.
  */
 

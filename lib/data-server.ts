@@ -10,7 +10,7 @@ import type { Building, Grade, LawItem } from "./types";
 /**
  * 서버 전용 정적 인덱스 — 건물 속성(도형 없음)·타임라인 원천·법령 조문.
  * 빌드 시 JSON 이 번들에 포함되므로 Vercel 함수에서도 파일 접근 없이 동작한다.
- * 점수는 사전 계산값 그대로 (CLAUDE.md 데이터 원칙 2).
+ * 점수는 사전 계산값 그대로 (데이터 원칙 2: 재계산 금지).
  */
 
 export const DATA_ASOF = propsJson.asof as string;

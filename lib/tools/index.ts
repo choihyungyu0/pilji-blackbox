@@ -9,7 +9,7 @@ import { parseJibunQuery, jibunOf } from "../geo";
 import type { Building, Case, ToolCallLog } from "../types";
 
 /**
- * AGT-01 공간 AI 에이전트 도구 8종 (CLAUDE.md 표). 모든 도구는 정적 데이터·판정 컨텍스트만 읽는다.
+ * AGT-01 공간 AI 에이전트 도구 (기능명세서 AGT-01 표). 모든 도구는 정적 데이터·판정 컨텍스트만 읽는다.
  * 실패는 {error} 로 돌려주고 답변에 명시한다 (BR-A2). 미구현(P1)은 available:false 로 솔직하게.
  */
 

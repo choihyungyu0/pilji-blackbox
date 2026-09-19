@@ -22,7 +22,7 @@ export function floorsText(up: number | null | undefined, dn: number | null | un
   return `${u} · ${d}`;
 }
 
-/** 3D 돌출 높이(m): 층수×3, 없으면 높이, 둘 다 없으면 3 (CLAUDE.md 스택 규칙) */
+/** 3D 돌출 높이(m): 층수×3, 없으면 높이, 둘 다 없으면 3 (설계서 스택 규칙) */
 export function extrudeHeight(fl_up: number | null | undefined, h: number | null | undefined) {
   if (fl_up != null && fl_up > 0) return fl_up * 3;
   if (h != null && h > 0) return h;
