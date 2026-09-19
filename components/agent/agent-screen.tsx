@@ -21,6 +21,7 @@ type Msg = { role: "user" | "assistant"; content: string; tools?: ToolCallLog[];
 
 const STEPS = ["필지 조회", "이력 조립", "조문 검색", "문서 작성"];
 const PRESETS = [
+  "이 필지 조사부터 기안까지 한 번에",
   "이 필지의 기본정보와 점수 근거를 정리해줘",
   "이 필지 타임라인을 출처와 함께 요약해줘",
   "위반건축물 시정명령과 이행강제금 근거 조문을 인용해줘",

@@ -94,7 +94,12 @@ export function ParcelPanel({ mode }: { mode: Mode }) {
             <span className="ml-auto underline">사건 열기 →</span>
           </Link>
         )}
-        {b.viol === "Y" && <p className="rounded-md bg-sig-viol/10 px-3 py-1.5 text-xs font-semibold text-sig-viol">위반건축물 표기 있음 (건물통합정보 A20=Y)</p>}
+        {b.viol === "Y" && (
+          <div className="rounded-md bg-sig-viol/10 px-3 py-1.5 text-xs">
+            <p className="font-semibold text-sig-viol">위반건축물 표기 있음 (건물통합정보 A20=Y)</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">건축물대장 기재사항이며 GIS건물통합정보(공공누리 제1유형)로 공개된 정보입니다.</p>
+          </div>
+        )}
 
         {/* CRD-01 기본정보 */}
         <section className="card p-3">

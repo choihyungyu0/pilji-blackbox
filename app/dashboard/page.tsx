@@ -4,6 +4,7 @@ import { dongStats, timelineSources } from "@/lib/data-server";
 import metrics from "@/data/model_metrics.json";
 import { GainsChart } from "@/components/dashboard/gains-chart";
 import { DongTable } from "@/components/dashboard/dong-table";
+import { AdjustCard } from "@/components/dashboard/adjust-card";
 
 export const metadata: Metadata = { title: "성과" };
 
@@ -32,6 +33,8 @@ export default function DashboardPage() {
         <Kpi label="AI 후보" value={`${t.cand.toLocaleString()}동`} note={`A ${t.A} · B ${t.B.toLocaleString()} (위반 표기 없는 건물 중 점수 상위 10% 임계값 이상)`} />
         <Kpi label="1년 변화 (2025.9→2026.9)" value={`신규 ${ch.viol_added} · 해제 ${ch.viol_cleared}`} note={`신규 건물 ${ch.new_building} · 두 스냅숏 A20 비교`} />
       </section>
+
+      <AdjustCard />
 
       <section className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
         <div className="card p-4">

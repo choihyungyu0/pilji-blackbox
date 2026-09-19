@@ -15,6 +15,8 @@ import { SurveyForm } from "@/components/cases/survey-form";
 import { OrgForm } from "@/components/cases/org-form";
 import { DocCard } from "@/components/agent/doc-card";
 import { cn } from "@/lib/utils";
+import { useRanking } from "@/lib/adjust/use-ranking";
+import { pct } from "@/lib/adjust/context";
 
 const MiniMap = dynamic(() => import("./mini-map").then((m) => m.MiniMap), { ssr: false });
 
@@ -53,16 +55,28 @@ export function InvestigateScreen() {
   const plan = useDocGen();
   const report = useDocGen();
 
-  type Row = { it: (typeof list)[number]; i: number; b: Building; c: Case | undefined };
+  const ranking = useRanking();
+  const [sortBy, setSortBy] = useState<"adj" | "base">("adj");
+  type Row = { it: (typeof list)[number]; i: number; b: Building; c: Case | undefined; adj?: ReturnType<typeof ranking.adjOf>; baseNo: number; adjNo: number | null };
   const rows = useMemo<Row[]>(() => {
     if (!index) return [];
-    const out: Row[] = [];
-    list.forEach((it, i) => {
+    const raw: Omit<Row, "i" | "baseNo" | "adjNo">[] = [];
+    list.forEach((it) => {
       const b = index.byId.get(it.id);
-      if (b) out.push({ it, i, b, c: cases[it.id] });
+      if (b) raw.push({ it, b, c: cases[it.id], adj: ranking.ready ? ranking.adjOf(it.id) : undefined });
     });
-    return out;
-  }, [list, index, cases]);
+    // 기본 순위 = 목록 안 점수 내림차순, 보정 순위 = 보정 점수 내림차순(제외 건은 맨 뒤·순위 없음)
+    const baseOrder = [...raw].sort((x, y) => (y.b.score ?? -1) - (x.b.score ?? -1) || x.b.id - y.b.id);
+    const baseNo = new Map(baseOrder.map((r, i) => [r.b.id, i + 1]));
+    const adjVal = (r: (typeof raw)[number]) => (r.adj?.excluded ? -1 : r.adj?.adj ?? r.b.score ?? -1);
+    const adjOrder = ranking.ready ? [...raw].sort((x, y) => adjVal(y) - adjVal(x) || (y.b.score ?? -1) - (x.b.score ?? -1) || x.b.id - y.b.id) : baseOrder;
+    const adjNo = new Map<number, number | null>();
+    let k = 0;
+    for (const r of adjOrder) adjNo.set(r.b.id, r.adj?.excluded ? null : ++k);
+    const ordered = ranking.ready && sortBy === "adj" ? adjOrder : baseOrder;
+    return ordered.map((r, i) => ({ ...r, i, baseNo: baseNo.get(r.b.id)!, adjNo: adjNo.get(r.b.id) ?? null }));
+  }, [list, index, cases, ranking, sortBy]);
+  const movedInList = useMemo(() => rows.filter((r) => r.adjNo != null && r.adjNo !== r.baseNo).length, [rows]);
 
   async function generate() {
     setBusy(true);
@@ -194,23 +208,64 @@ export function InvestigateScreen() {
                 <span className="chip text-green-700">정상 {stats.NORMAL}</span>
                 <span className="chip">대상아님 {stats.NOT_TARGET}</span>
                 <span className="chip text-violet-700">보류 {stats.HOLD}</span>
+                {ranking.ready && (
+                  <span className="chip border-brand/40 bg-brand/10 text-brand" title="반경 200m 판정의 라플라스 평활 가중 — 판정은 조사 순서만 바꾼다. 위반 여부를 바꾸지 않는다.">
+                    판정 {ranking.summary.verdicts}건 반영됨 · 반경 200m 후보 {ranking.summary.affected.toLocaleString("ko-KR")}건 영향 · 이 목록 순위 {movedInList}건 변동
+                  </span>
+                )}
                 <button data-tour="report" className="btn btn-sm ml-auto" disabled={report.busy || stats.pending === stats.total} onClick={makeReport}><ClipboardCheck className="size-3.5" /> ④ 결과 보고 생성</button>
               </div>
               {report.doc && <div className="p-2"><DocCard doc={report.doc} /></div>}
+              {ranking.ready && (
+                <p className="border-b border-border bg-amber-50 px-2 py-1 text-[11px] text-amber-900">
+                  보정 순위 = AI 점수 × (1 + 안양 여건) × (1 + 주변 판정). <b>판정은 조사 순서만 바꾼다. 위반 여부를 바꾸지 않는다.</b> 헤더의 "기본 순위"를 누르면 AI 점수 순서로 되돌아갑니다.
+                </p>
+              )}
               <table className="w-full min-w-[900px] text-xs">
                 <thead className="bg-muted text-left text-[11px] uppercase text-muted-foreground">
-                  <tr><th className="px-2 py-2">#</th><th className="px-2 py-2">법정동 지번</th><th className="px-2 py-2">주용도</th><th className="px-2 py-2 text-right">점수</th><th className="px-2 py-2">단계</th><th className="px-2 py-2">판정 · 위반 내용 · 사진</th><th className="px-2 py-2"></th></tr>
+                  <tr>
+                    <th className="px-2 py-2">#</th>
+                    {ranking.ready && (
+                      <>
+                        <th className="px-2 py-2"><button className={cn("underline decoration-dotted", sortBy === "base" && "font-bold text-foreground")} onClick={() => setSortBy("base")} title="AI 점수 순서로 정렬">기본 순위</button></th>
+                        <th className="px-2 py-2"><button className={cn("underline decoration-dotted", sortBy === "adj" && "font-bold text-foreground")} onClick={() => setSortBy("adj")} title="안양 여건 보정 × 주변 판정 순서로 정렬 (기본)">보정 순위</button></th>
+                      </>
+                    )}
+                    <th className="px-2 py-2">법정동 지번</th><th className="px-2 py-2">주용도</th><th className="px-2 py-2 text-right">점수{ranking.ready ? " → 보정" : ""}</th><th className="px-2 py-2">단계</th><th className="px-2 py-2">판정 · 위반 내용 · 사진</th><th className="px-2 py-2"></th>
+                  </tr>
                 </thead>
                 <tbody>
-                  {rows.map(({ it, i, b, c }) => (
-                    <tr key={b.id} className={cn("border-t border-border align-top", selected === b.id && "bg-brand/5")} onClick={() => setSelected(b.id)}>
+                  {rows.map(({ it, i, b, c, adj, baseNo, adjNo }) => (
+                    <tr key={b.id} className={cn("border-t border-border align-top", selected === b.id && "bg-brand/5", adj?.excluded && "opacity-60")} onClick={() => setSelected(b.id)}>
                       <td className="px-2 py-2 font-semibold tnum">{i + 1}{it.addedBy === "manual" && <span className="ml-1 text-[9px] text-muted-foreground">수동</span>}</td>
+                      {ranking.ready && (
+                        <>
+                          <td className="px-2 py-2 tnum text-muted-foreground">{baseNo}</td>
+                          <td className="px-2 py-2 tnum">
+                            {adjNo == null ? <span className="text-[10px] text-red-800">제외</span> : (
+                              <>
+                                <b>{adjNo}</b>
+                                {adjNo < baseNo && <span className="ml-1 text-[10px] text-red-700">▲{baseNo - adjNo}</span>}
+                                {adjNo > baseNo && <span className="ml-1 text-[10px] text-sky-700">▼{adjNo - baseNo}</span>}
+                              </>
+                            )}
+                          </td>
+                        </>
+                      )}
                       <td className="px-2 py-2">
                         <Link href={`/cases/${b.id}`} className="font-semibold hover:underline">{b.dong} {b.san === "산" ? "산 " : ""}{b.jibun}</Link>
-                        <p className="text-[10px] text-muted-foreground tnum">{b.pnu}{b.gb ? " · GB" : ""} · {fmt.int(b.year)}년</p>
+                        <p className="text-[10px] text-muted-foreground tnum">{b.pnu}{b.gb ? " · GB" : ""} · {fmt.year(b.year)}년</p>
                       </td>
                       <td className="px-2 py-2">{fmt.text(b.use)}</td>
-                      <td className="px-2 py-2 text-right tnum font-semibold">{fmt.score(b.score)} {b.grade && b.cand ? <span className={cn("ml-1 rounded px-1 text-[10px] font-bold text-white", b.grade === "A" ? "bg-sig-cand" : "bg-sig-candb")}>{b.grade}</span> : null}</td>
+                      <td className="px-2 py-2 text-right tnum font-semibold">
+                        {fmt.score(b.score)} {b.grade && b.cand ? <span className={cn("ml-1 rounded px-1 text-[10px] font-bold text-white", b.grade === "A" ? "bg-sig-cand" : "bg-sig-candb")}>{b.grade}</span> : null}
+                        {adj && !adj.excluded && (
+                          <p className="text-[10px] font-normal text-muted-foreground" title={[...adj.reasons.map((r) => `${r.label}(${pct(r.weight)}) · ${r.dataset}`), adj.wVerdict ? `주변 판정 ${pct(adj.wVerdict)} (반경 200m 위반 ${adj.verdict.nViol}·정상 ${adj.verdict.nNorm})` : ""].filter(Boolean).join("\n") || "안양 여건 보정 없음"}>
+                            → {adj.adj.toFixed(3)} <span className={cn(adj.wCtx + adj.wVerdict > 0 ? "text-red-700" : adj.wCtx + adj.wVerdict < 0 ? "text-sky-700" : "")}>{adj.wCtx || adj.wVerdict ? `${adj.wCtx ? `여건 ${pct(adj.wCtx)}` : ""}${adj.wCtx && adj.wVerdict ? " · " : ""}${adj.wVerdict ? `판정 ${pct(adj.wVerdict)}` : ""}` : "보정 없음"}</span>
+                          </p>
+                        )}
+                        {adj?.excluded && <p className="text-[10px] font-normal text-red-800">{adj.excludedBy === "C1" ? "공공건축물 필지 제외" : "'대상 아님' 판정 제외"}</p>}
+                      </td>
                       <td className="px-2 py-2">{c ? <span className="rounded px-1.5 py-0.5 text-[10px] font-bold text-white" style={{ background: STAGE_META[c.stage].color }}>{STAGE_META[c.stage].label}</span> : <span className="text-muted-foreground">미등록</span>}</td>
                       <td className="min-w-[320px] px-2 py-2"><SurveyForm b={b} compact /></td>
                       <td className="px-2 py-2">

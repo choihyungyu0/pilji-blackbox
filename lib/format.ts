@@ -7,6 +7,8 @@ export const fmt = {
     v == null ? NA : `${new Intl.NumberFormat("ko-KR").format(Math.round(v))}${unit}`,
   num: (v: number | null | undefined, digits = 1, unit = "") =>
     v == null ? NA : `${new Intl.NumberFormat("ko-KR", { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(v)}${unit}`,
+  /** 연도 — 천 단위 쉼표 없이 (1,980년 ✗ → 1980년) */
+  year: (v: number | null | undefined) => (v == null ? NA : String(Math.round(v))),
   score: (v: number | null | undefined) => (v == null ? NA : v.toFixed(3)),
   pct: (v: number | null | undefined, digits = 1) => (v == null ? NA : `${(v * 100).toFixed(digits)}%`),
   date: (v: string | null | undefined) => (v == null || v === "" ? NA : v),

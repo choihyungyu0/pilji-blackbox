@@ -55,10 +55,11 @@ export const USE_COLORS: [string, string][] = [
 export function baseColorExpr(mode: ColorMode): ExpressionSpecification {
   switch (mode) {
     case "score":
+      // 보정 점수(feature-state.adj, 안양 여건 × 판정)가 있으면 그것으로, 없으면 기본 점수로 색을 칠한다
       return [
         "case",
         ["==", ["typeof", ["get", "score"]], "number"],
-        ["interpolate", ["linear"], ["get", "score"], 0, "#e5e7eb", 0.08, "#fde68a", 0.165, "#fb923c", 0.222, "#ef4444", 0.5, "#991b1b", 0.75, "#450a0a"],
+        ["interpolate", ["linear"], ["coalesce", ["feature-state", "adj"], ["get", "score"]], 0, "#e5e7eb", 0.08, "#fde68a", 0.165, "#fb923c", 0.222, "#ef4444", 0.5, "#991b1b", 0.75, "#450a0a"],
         COLORS.na,
       ];
     case "viol":
@@ -91,8 +92,10 @@ export function colorExpr(colorMode: ColorMode, layers: Record<LayerKey, boolean
   }
   if (layers.viol) e.push(["==", ["coalesce", ["get", "viol"], ""], "Y"], COLORS.viol);
   if (mode === "officer" && layers.cand) {
-    e.push(["==", ["coalesce", ["get", "grade"], ""], "A"], COLORS.candA);
-    e.push(["==", ["coalesce", ["get", "grade"], ""], "B"], COLORS.candB);
+    // 후보 제외(C1 공공건축물 필지·'대상 아님' 판정)는 후보 강조색을 주지 않는다
+    const notExcluded = ["!", ["boolean", ["feature-state", "excluded"], false]];
+    e.push(["all", notExcluded, ["==", ["coalesce", ["get", "grade"], ""], "A"]], COLORS.candA);
+    e.push(["all", notExcluded, ["==", ["coalesce", ["get", "grade"], ""], "B"]], COLORS.candB);
   }
   if (layers.ledger) e.push(["!", ["to-boolean", ["get", "ledger"]]], COLORS.ledger);
   e.push(baseColorExpr(colorMode));

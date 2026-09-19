@@ -5,6 +5,7 @@ import maplibregl, { type Map as MLMap, type MapMouseEvent } from "maplibre-gl";
 import { useApp } from "@/store/app-store";
 import { useBuildings } from "@/store/buildings";
 import { useCases } from "@/store/cases";
+import { useRanking } from "@/lib/adjust/use-ranking";
 import { ANYANG_CENTER } from "@/lib/geo";
 import type { Building, Mode } from "@/lib/types";
 import { HEIGHT_EXPR, VWORLD_KEY, baseStyle, colorExpr, filterExpr, COLORS } from "./map-style";
@@ -255,6 +256,24 @@ export function MapView({ mode, onSatFallback }: Props) {
     for (const id of appliedVerdicts.current) if (!next.has(id)) map.setFeatureState({ source: "bldg", id }, { verdict: null });
     appliedVerdicts.current = next;
   }, [ready, cases, mode, index]);
+
+  /* ── 안양 여건 보정 × 판정 재순위 (feature-state: adj·excluded) — 판정이 바뀌면 즉시 다시 칠한다 ── */
+  const ranking = useRanking();
+  const appliedAdj = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready || !map.getSource("bldg") || mode !== "officer" || !ranking.ready || !index) return;
+    const next = new Set<number>();
+    for (const b of index.list) {
+      if (!b.cand) continue;
+      const a = ranking.adjOf(b.id);
+      if (!a) continue;
+      next.add(b.id);
+      map.setFeatureState({ source: "bldg", id: b.id }, { adj: a.excluded ? null : a.adj, excluded: a.excluded });
+    }
+    for (const id of appliedAdj.current) if (!next.has(id)) map.setFeatureState({ source: "bldg", id }, { adj: null, excluded: false });
+    appliedAdj.current = next;
+  }, [ready, mode, index, ranking]);
 
   /* ── 조사 목록 번호 핀 ── */
   useEffect(() => {

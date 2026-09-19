@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "data": "python scripts/build_data.py",
     "data:vworld": "python scripts/fetch_vworld_layers.py",
-    "templates": "python scripts/make_hwpx_templates.py"
+    "templates": "python scripts/make_hwpx_templates.py",
+    "data:adjust": "node scripts/build_ctx_adjust.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.0",

@@ -113,7 +113,7 @@ export function buildSurveyPlan(input: { ids: number[]; purpose?: string; planDa
   for (let i = 0; i < SURVEY_ROWS; i++) {
     const b = bs[i];
     const cells = b
-      ? [String(i + 1), b.dong, `${b.san === "산" ? "산 " : ""}${b.jibun}`, s(b.use), s(b.year), b.score == null ? "정보없음" : b.score.toFixed(3), s(b.grade), b.gb ? "내부" : ""]
+      ? [String(i + 1), b.dong, `${b.san === "산" ? "산 " : ""}${b.jibun}`, s(b.use), s(b.year), b.score == null ? "정보없음" : b.score.toFixed(3), s(b.grade), b.gb == null ? "정보없음" : b.gb ? "내부" : "외부"]
       : ["", "", "", "", "", "", "", ""];
     cells.forEach((c, j) => (t[`R${i + 1}C${j + 1}`] = c));
   }

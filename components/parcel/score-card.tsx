@@ -3,6 +3,8 @@
 import { Info } from "lucide-react";
 import type { Building } from "@/lib/types";
 import { fmt } from "@/lib/format";
+import { useRanking } from "@/lib/adjust/use-ranking";
+import { pct } from "@/lib/adjust/context";
 
 /**
  * SCR-01 AI 점수·등급 + BDG-01 신호 근거 막대 (PCL-02, MDL-01).
@@ -65,6 +67,7 @@ export function ScoreCard({ b }: { b: Building }) {
       <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
         <Info className="size-3" /> 등급은 조사 순서이며 위반 판정이 아님 · A ≥0.222 · B ≥0.165 · 기준 2026-09-09
       </p>
+      {b.cand && <AdjustLine b={b} />}
 
       <p className="label mt-3">신호 근거 <span className="font-normal normal-case tracking-normal">(기여 추정 = 전역 중요도 × 값)</span></p>
       <ul className="mt-1 space-y-1.5">
@@ -87,5 +90,53 @@ export function ScoreCard({ b }: { b: Building }) {
       )}
       <p className="mt-2 text-[10px] text-muted-foreground">모델: HistGradientBoosting · 공간 5-fold AUC 0.728 · 시간 검증 AUC 0.698 · 점수는 사전 계산값</p>
     </section>
+  );
+}
+
+/**
+ * 안양 여건 보정 + 판정 재순위 (P0-1·P0-2) — AI 점수는 그대로 두고 조사 순위만 바꾼 값을 근거와 함께 보여준다.
+ * 보정이 0이면 "안양 여건 보정 없음"이라고 숨기지 않고 적는다. 꺼져 있으면 아무것도 그리지 않는다.
+ */
+function AdjustLine({ b }: { b: Building }) {
+  const { enabled, ready, adjOf, ctx } = useRanking();
+  if (!enabled || !ready) return null;
+  const a = adjOf(b.id);
+  if (!a || b.score == null) return null;
+  const ctxPct = pct(a.wCtx);
+  return (
+    <div className="mt-2 rounded-md border border-border bg-muted/40 p-2 text-[11px]" data-tour="adjust">
+      {a.excluded ? (
+        <p className="font-semibold text-red-800">
+          조사 후보 제외 — {a.excludedBy === "C1" ? "공공건축물 필지(안양시_공공건축물현황)" : "담당자 판정 '대상 아님'"}
+        </p>
+      ) : (
+        <p className="tnum">
+          AI 점수 <b>{fmt.score(b.score)}</b> → 조사 순위 점수 <b>{a.adj.toFixed(3)}</b>
+          {a.wCtx !== 0 ? ` (안양 여건 ${ctxPct}` : " (안양 여건 보정 없음"}
+          {a.wVerdict !== 0 ? ` · 주변 판정 ${pct(a.wVerdict)}` : ""}
+          {")"}
+          {a.rankBase != null && a.rankAdj != null && (
+            <span className="ml-1 text-muted-foreground">· 기본 {a.rankBase.toLocaleString("ko-KR")}위 → 보정 {a.rankAdj.toLocaleString("ko-KR")}위 / {ctx?.stats.final_candidates.toLocaleString("ko-KR")}</span>
+          )}
+        </p>
+      )}
+      <div className="mt-1 flex flex-wrap gap-1">
+        {a.reasons.map((r) => (
+          <span key={r.code} className="chip" title={`${r.cond ?? ""} · 출처 ${r.source}`}>
+            {r.label}{r.detail ? ` ${r.detail}` : ""}({pct(r.weight)}) · {r.dataset}
+          </span>
+        ))}
+        {a.reasons.length === 0 && !a.excluded && <span className="chip text-muted-foreground">안양 여건 보정 없음</span>}
+        {(a.verdict.nViol > 0 || a.verdict.nNorm > 0) && (
+          <span className="chip" title="반경 200m 담당자 판정 — 라플라스 평활 0.25×(위반−정상)/(위반+정상+2)">
+            주변 판정 반영 {pct(a.wVerdict)} (반경 200m 위반 {a.verdict.nViol}건 · 정상 {a.verdict.nNorm}건)
+          </span>
+        )}
+      </div>
+      <p className="mt-1 text-[10px] text-muted-foreground">
+        adj = score × (1 + w_ctx) × (1 + w_verdict) · 판정은 조사 순서만 바꾼다. 위반 여부를 바꾸지 않는다.
+        {a.reasons.some((r) => r.code === "C4") ? " · C4 는 행정동 인구 자료가 없어 절대량 기준" : ""}
+      </p>
+    </div>
   );
 }
